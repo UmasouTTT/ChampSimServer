@@ -19,6 +19,7 @@ using namespace std;
 #define GHB_SIZE 256
 #define random(x)(rand()%x)
 
+
 struct ghb_entry{
     uint64_t cache_line_addr;
     uint64_t ip;
