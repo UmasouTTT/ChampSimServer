@@ -105,7 +105,7 @@ class PACKET {
 
     uint32_t cpu, data_index, lq_index, sq_index;
 
-    uint64_t address, 
+    uint64_t address, //cache_line
              full_addr, 
              instruction_pa,
              data_pa,
@@ -118,8 +118,8 @@ class PACKET {
     PACKET() {
         instruction = 0;
         is_data = 1;
-	fill_l1i = 0;
-	fill_l1d = 0;
+	    fill_l1i = 0;
+	    fill_l1d = 0;
         tlb_access = 0;
         scheduled = 0;
         translated = 0;
