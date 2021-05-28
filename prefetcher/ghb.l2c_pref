@@ -10,13 +10,12 @@
 #include <iostream>
 #include <string>
 #include "log.h"
+#include "champsim_tool.h"
 
 using namespace std;
 
 ChampSimLog cslog("log.txt");
 
-#define PREFETCH_LOOK_AHEAD 4
-#define PREFETCH_DEGREE 4
 #define IT_SIZE 256
 #define GHB_SIZE 256
 #define random(x)(rand()%x)
@@ -33,8 +32,6 @@ struct ip_lru{
     uint64_t ip;
     uint32_t lru;
 };
-
-
 
 class GHB{
 public:
@@ -173,19 +170,36 @@ private:
     }
 };
 
-
 GHB *ghb = new GHB();
-
-
+uint64_t old_prefetch_useful = 0;
+uint64_t old_prefetch_issued = 0;
+uint64_t instruction_num;
+int PREFETCH_LOOK_AHEAD 4
+int PREFETCH_DEGREE 4
 
 void CACHE::l2c_prefetcher_initialize()
 {
     cout << "CPU " << cpu << " L2C GHB prefetcher" << endl;
+    instruction_num = 0;
     cslog.makeLog(string("CPU " + to_string(cpu) + " L2C GHB prefetcher"), true);
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
+    //feedback
+    instruction_num += 1;
+    if(0 == instruction_num % 1000){
+        if(0 == old_prefetch_issued){
+            //uint64_t old_pf_useful, uint64_t new_pf_useful, uint64_t old_pf_issued, uint64_t new_pf_issued
+            float accuracy = Tool::calculate_prefetch_accuracy(0, pf_useful, 0, pf_issued);
+        }
+        else{
+            float accuracy = Tool::calculate_prefetch_accuracy(old_prefetch_useful, pf_useful, old_prefetch_issued, pf_issued);
+        }
+        old_prefetch_useful = pf_useful;
+        old_prefetch_issued = pf_issued;
+    }
+
     cslog.makeLog(string("Start prefetch: addr:" + to_string(addr) + ", ip:" + to_string(ip)),is_log);
     vector<uint64_t> prefetch_addr = ghb->trigger(addr, ip);
 
