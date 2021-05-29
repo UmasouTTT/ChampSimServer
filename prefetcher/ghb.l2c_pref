@@ -21,6 +21,13 @@ ChampSimLog cslog("log.txt");
 #define random(x)(rand()%x)
 #define is_log 0
 
+
+uint64_t old_prefetch_useful = 0;
+uint64_t old_prefetch_issued = 0;
+uint64_t instruction_num;
+int PREFETCH_LOOK_AHEAD = 4;
+int PREFETCH_DEGREE = 4;
+
 struct ghb_entry{
     uint64_t cache_line_addr;
     uint64_t ip;
@@ -171,11 +178,6 @@ private:
 };
 
 GHB *ghb = new GHB();
-uint64_t old_prefetch_useful = 0;
-uint64_t old_prefetch_issued = 0;
-uint64_t instruction_num;
-int PREFETCH_LOOK_AHEAD 4
-int PREFETCH_DEGREE 4
 
 void CACHE::l2c_prefetcher_initialize()
 {
