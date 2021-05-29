@@ -24,7 +24,8 @@ ChampSimLog cslog("log.txt");
 
 uint64_t old_prefetch_useful = 0;
 uint64_t old_prefetch_issued = 0;
-uint64_t instruction_num;
+int instruction_num = 0;
+int num_of_late_prefetches = 0;
 int PREFETCH_LOOK_AHEAD = 4;
 int PREFETCH_DEGREE = 4;
 
@@ -189,24 +190,40 @@ void CACHE::l2c_prefetcher_initialize()
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
     //feedback
+    //lateness
+    float accuracy = 0;
+    float lateness = 0;
+    if(is_address_in_mshr((addr>>LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE)){
+        num_of_late_prefetches += 1;
+    }
+
     instruction_num += 1;
     if(0 == instruction_num % 1000){
+        //accuracy
         if(0 == old_prefetch_issued){
             //uint64_t old_pf_useful, uint64_t new_pf_useful, uint64_t old_pf_issued, uint64_t new_pf_issued
-            float accuracy = Tool::calculate_prefetch_accuracy(0, pf_useful, 0, pf_issued);
+            accuracy = Tool::calculate_prefetch_accuracy(0, pf_useful, 0, pf_issued);
         }
         else{
-            float accuracy = Tool::calculate_prefetch_accuracy(old_prefetch_useful, pf_useful, old_prefetch_issued, pf_issued);
+            accuracy = Tool::calculate_prefetch_accuracy(old_prefetch_useful, pf_useful, old_prefetch_issued, pf_issued);
         }
         old_prefetch_useful = pf_useful;
         old_prefetch_issued = pf_issued;
+        //lateness
+        cslog.makeLog(string("num_of_late_prefetches: " + to_string(num_of_late_prefetches) + " ;minus: " + to_string(lateness)), true);
+        if(0 != (pf_useful - old_prefetch_useful)){
+            lateness = (float)num_of_late_prefetches / (float)(pf_useful - old_prefetch_useful);
+        }
+        cslog.makeLog(string("accuracy: " + to_string(accuracy) + " ;lateness: " + to_string(lateness)), true);
+        //reset
+        instruction_num = 0;
+        num_of_late_prefetches = 0;
     }
 
     cslog.makeLog(string("Start prefetch: addr:" + to_string(addr) + ", ip:" + to_string(ip)),is_log);
     vector<uint64_t> prefetch_addr = ghb->trigger(addr, ip);
 
     for (int i = 0; i < prefetch_addr.size(); ++i) {
-        // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
         cslog.makeLog(string("origin address: " + to_string(addr)),is_log);
         cslog.makeLog(string("prefetch address: " + to_string(prefetch_addr[i])),is_log);
         prefetch_line(ip, addr, prefetch_addr[i], FILL_L2, 0);
