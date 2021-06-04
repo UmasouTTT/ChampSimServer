@@ -193,7 +193,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     //lateness
     float accuracy = 0;
     float lateness = 0;
-    if(is_address_in_mshr((addr>>LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE)){
+    if(is_address_in_mshr(addr>>LOG2_BLOCK_SIZE)){
         num_of_late_prefetches += 1;
     }
 
@@ -218,6 +218,12 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
         //reset
         instruction_num = 0;
         num_of_late_prefetches = 0;
+        //debug
+        cslog.makeLog(string("address :" + to_string(addr) + " ;cache line: " + to_string(addr>>LOG2_BLOCK_SIZE)), true);
+        for (uint32_t index=0; index<MSHR_SIZE; index++)
+        {
+            cslog.makeLog(string("MSHR: address :" + to_string(MSHR.entry[index].address) + " ;type: " + to_string(MSHR.entry[index].type)), true);
+        }
     }
 
     cslog.makeLog(string("Start prefetch: addr:" + to_string(addr) + ", ip:" + to_string(ip)),is_log);

@@ -37,7 +37,7 @@ This code uses these ideas, but prefers simplicity over absolute accuracy (I
 wrote it in about an hour and later spent more time on this comment block than
 I did on the code). These papers and subsequent papers by Jiménez and other
 authors significantly improve the accuracy of perceptron-based predictors but
-involve tricks and analysis beyond the needs of a tool like ChampSim that
+involve tricks and analysis beyond the needs of a py_tool like ChampSim that
 targets cache optimizations. If you want accuracy at any cost, see the winners
 of the latest branch prediction contest, CBP 2016 as of this writing, but
 prepare to have your face melted off by the complexity of the code you find

@@ -1,0 +1,34 @@
+#include "cache.h"
+#include <map>
+#include "log.h"
+
+using namespace std;
+
+ChampSimLog cslog("log.txt");
+map<uint64_t, uint64_t> ip_time;
+
+void CACHE::l1d_prefetcher_initialize()
+{
+
+}
+
+void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type)
+{
+    if(ip_time.find(ip) == ip_time.end()){
+        ip_time[ip] = 0;
+    }
+    ip_time[ip] += 1;
+}
+
+void CACHE::l1d_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+{
+
+}
+
+void CACHE::l1d_prefetcher_final_stats()
+{
+    for (auto it = ip_time.begin(); it != ip_time.end() ; it++) {
+        cslog.makeLog(string("ip: " + to_string(it->first) + " count :" + to_string(it->second)), true);
+    }
+
+}

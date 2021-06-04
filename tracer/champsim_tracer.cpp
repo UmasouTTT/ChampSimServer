@@ -1,7 +1,7 @@
 
 /*! @file
- *  This is an example of the PIN tool that demonstrates some basic PIN APIs 
- *  and could serve as the starting point for developing your first PIN tool
+ *  This is an example of the PIN py_tool that demonstrates some basic PIN APIs
+ *  and could serve as the starting point for developing your first PIN py_tool
  */
 
 #include "pin.H"
@@ -61,7 +61,7 @@ KNOB<UINT64> KnobTraceInstructions(KNOB_MODE_WRITEONCE, "pintool", "t", "1000000
  */
 INT32 Usage()
 {
-    cerr << "This tool creates a register and memory access trace" << endl 
+    cerr << "This py_tool creates a register and memory access trace" << endl
         << "Specify the output trace file with -o" << endl 
         << "Specify the number of instructions to skip before tracing with -s" << endl
         << "Specify the number of instructions to trace with -t" << endl << endl;
@@ -371,7 +371,7 @@ VOID Instruction(INS ins, VOID *v)
  * Print out analysis results.
  * This function is called when the application exits.
  * @param[in]   code            exit code of the application
- * @param[in]   v               value specified by the tool in the 
+ * @param[in]   v               value specified by the py_tool in the
  *                              PIN_AddFiniFunction function call
  */
 VOID Fini(INT32 code, VOID *v)
@@ -385,7 +385,7 @@ VOID Fini(INT32 code, VOID *v)
 }
 
 /*!
- * The main procedure of the tool.
+ * The main procedure of the py_tool.
  * This function is called when the application image is loaded but not yet started.
  * @param[in]   argc            total number of elements in the argv array
  * @param[in]   argv            array of command line arguments, 

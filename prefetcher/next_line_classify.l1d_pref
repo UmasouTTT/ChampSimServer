@@ -1,11 +1,10 @@
 #include "cache.h"
 #include <vector>
-#include <map>
 using namespace std;
-#define max_ip 10
-map<uint64_t, uint64_t> ip_lru;
 
-void CACHE::l1d_prefetcher_initialize() 
+vector<uint64_t> frequent_ip
+
+void CACHE::l1d_prefetcher_initialize()
 {
     cout << "CPU " << cpu << " L1D next line prefetcher" << endl;
 }
