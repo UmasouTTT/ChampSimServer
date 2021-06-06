@@ -58,5 +58,5 @@ if __name__ == '__main__':
 
     #ip_classifier_simple_prefetcher = "bimodal-no-ip_classifier_simple-ip_classifier_simple-no-lru-1core"
     #no_ip_classifier = "bimodal-no-no_ip_classifier-no_ip_classifier-no-lru-1core"
-    make_one_experiment(trace_dir, result_dir, ipcp_prefetcher, 50, 500, "{}".format(ipcp_prefetcher), 1000)
+    make_one_experiment(trace_dir, result_dir, ipcp_prefetcher, 50, 200, "{}".format(ipcp_prefetcher), 1000)
 
