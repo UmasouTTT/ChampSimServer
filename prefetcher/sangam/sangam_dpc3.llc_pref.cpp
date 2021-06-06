@@ -1,3 +1,9 @@
+//
+// Written for Data Prefetching Championship Simulator 3
+// Mainak Chaudhuri, Nayan Deshmukh. Sangam: A Multi-component Core Cache Prefetcher.
+//
+
+
 #include "cache.h"
 
 void CACHE::llc_prefetcher_initialize() 
