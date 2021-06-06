@@ -103,13 +103,13 @@ if __name__ == '__main__':
     #spp_prefetcher = "bimodal-no-next_line-next_line-no-lru-1core"
     #make_one_experiment(trace_dir, ip_feature_prefetcher, 1, 10, "{}".format(ip_feature_prefetcher), 100)
 
-    #ip_classifier_prefetcher = "bimodal-no-ip_classifier_v1-ip_classifier_v1-no-lru-1core"
+    ip_classifier_prefetcher = "bimodal-no-ip_classifier_v1-ip_classifier_v1-no-lru-1core"
     # ips = find_important_ip("602.gcc_s-734B.champsimtrace.xz", ip_feature_prefetcher, n_warm, n_sim, important_ip_file)
     # reload_valuable_ips(ips, important_ip_file)
     # os.system("./run_champsim.sh {} {} {} {}".format(ip_classifier_prefetcher, n_warm, n_sim, "602.gcc_s-734B.champsimtrace.xz"))
 
 
-    #prefetcher = ip_classifier_prefetcher
+    prefetcher = ip_classifier_prefetcher
 
     # #make experiment
     traces = os.listdir(trace_dir)

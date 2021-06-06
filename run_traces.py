@@ -19,7 +19,6 @@ def get_experiment_result(path):
     return results
 
 def make_one_experiment(trace_dir, result_dir, prefetcher, n_warm, n_sim, log_path, case_num):
-
     #make experiment
     traces = os.listdir(trace_dir)
     num = 0
@@ -43,8 +42,21 @@ if __name__ == '__main__':
     #prefetcher = "bimodal-no-no-ip_stride-no-lru-1core"
     #ip_feature_prefetcher = "bimodal-no-ip_feature_find-no-no-lru-1core"
     #spp_prefetcher = "bimodal-no-next_line-next_line-no-lru-1core"
-    #ipcp_prefetcher = "bimodal-no-ipcp-ipcp-ipcp-lru-1core"
+    ipcp_prefetcher = "bimodal-no-ipcp-ipcp-ipcp-lru-1core"
+
+
+    branch_predicor = "bimodal"
+    l1i_prefetcher = "no"
+    l1d_prefetcher = "ipcp"
+    l2c_prefetcher = "ipcp"
+    llc_prefetcher = "ipcp"
+    llc_replacement = "lru"
+    core_num = "1"
+
+    #compile
+    os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
+
     #ip_classifier_simple_prefetcher = "bimodal-no-ip_classifier_simple-ip_classifier_simple-no-lru-1core"
-    no_ip_classifier = "bimodal-no-no_ip_classifier-no_ip_classifier-no-lru-1core"
-    make_one_experiment(trace_dir, result_dir, no_ip_classifier, 1, 10, "{}".format(no_ip_classifier), 100)
+    #no_ip_classifier = "bimodal-no-no_ip_classifier-no_ip_classifier-no-lru-1core"
+    make_one_experiment(trace_dir, result_dir, ipcp_prefetcher, 50, 500, "{}".format(ipcp_prefetcher), 1000)
 
