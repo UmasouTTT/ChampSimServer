@@ -12,7 +12,7 @@ Biswabandan Panda - biswap@cse.iitk.ac.in
 
 #include "cache.h"
 
-void CACHE::llc_prefetcher_initialize()
+void CACHE::llc_prefetcher_initialize() 
 {
 
 }

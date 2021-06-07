@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
     prefetcher = ip_classifier_prefetcher
 
-    # #make experiment
+    #make experiment
     traces = os.listdir(trace_dir)
     for trace in traces:
         print("Start make experiment on {}".format(trace))
