@@ -41,6 +41,8 @@ def deal_with_ip(ip_value):
     for ip in ip_value:
         if ip_value[ip][0] >= 0.8:
             valuable_ips.append(ip)
+        # if ip_value[ip][1] >= 1000:
+        #     valuable_ips.append(ip)
         else:
             print("valuless ip : {}".format(ip_value[ip]))
     print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
@@ -95,6 +97,7 @@ if __name__ == '__main__':
     n_sim = 200
     ip_valuable_analysisor = "bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core"
     prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
+    #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
 
 
 

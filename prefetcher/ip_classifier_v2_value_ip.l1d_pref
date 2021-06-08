@@ -79,7 +79,7 @@ uint64_t num_misses[NUM_CPUS];
 vector<uint64_t>important_ips;
 float mpkc[NUM_CPUS] = {0};
 int spec_nl[NUM_CPUS] = {0};
-ChampSimLog cslog("ip_log_attentiondsdfsdf.txt");
+ChampSimLog cslog("ip_log_only_classify.txt");
 
 
 
