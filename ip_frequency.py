@@ -96,8 +96,8 @@ if __name__ == '__main__':
     trace_dir = "dpc3_traces"
     result_dir = "results_10M"
     important_ip_file = "important_ips.txt"
-    n_warm = 1
-    n_sim = 10
+    n_warm = 50
+    n_sim = 200
     #prefetcher = "bimodal-no-no-ip_stride-no-lru-1core"
     ip_feature_prefetcher = "bimodal-no-ip_feature_find-no-no-lru-1core"
     #spp_prefetcher = "bimodal-no-next_line-next_line-no-lru-1core"
@@ -108,10 +108,7 @@ if __name__ == '__main__':
     # reload_valuable_ips(ips, important_ip_file)
     # os.system("./run_champsim.sh {} {} {} {}".format(ip_classifier_prefetcher, n_warm, n_sim, "602.gcc_s-734B.champsimtrace.xz"))
 
-
-    prefetcher = ip_classifier_prefetcher
-
-    #make experiment
+    # #make experiment
     traces = os.listdir(trace_dir)
     for trace in traces:
         print("Start make experiment on {}".format(trace))
@@ -120,11 +117,11 @@ if __name__ == '__main__':
         ips = find_important_ip(trace, ip_feature_prefetcher, n_warm, n_sim, important_ip_file)
         reload_valuable_ips(ips, important_ip_file)
         print("Start make experiment ...")
-        os.system("./run_champsim.sh {} {} {} {}".format(prefetcher, n_warm, n_sim, trace))
+        os.system("./run_champsim.sh {} {} {} {}".format(ip_classifier_prefetcher, n_warm, n_sim, trace))
     #get result
     print("Start deal with results")
     results = get_experiment_result(result_dir)
-    f = open("{}".format(prefetcher), "w+", encoding="utf-8")
+    f = open("{}".format(ip_feature_prefetcher), "w+", encoding="utf-8")
     for trace in results:
         f.write(trace + " : " + results[trace] + "\n")
     f.close()

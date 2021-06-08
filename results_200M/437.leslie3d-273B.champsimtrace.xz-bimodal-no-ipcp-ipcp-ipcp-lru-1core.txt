@@ -1,0 +1,20 @@
+
+*** ChampSim Multicore Out-of-Order Simulator ***
+
+Warmup Instructions: 50000000
+Simulation Instructions: 200000000
+Number of CPUs: 1
+LLC sets: 2048
+LLC ways: 16
+Off-chip DRAM Size: 4096 MB Channels: 1 Width: 64-bit Data Rate: 3200 MT/s
+
+CPU 0 runs /home/hkucs/tyl/ChampSimTyl/dpc3_traces/437.leslie3d-273B.champsimtrace.xz
+CPU 0 Bimodal branch predictor
+Heartbeat CPU 0 instructions: 10000003 cycles: 4287469 heartbeat IPC: 2.33238 cumulative IPC: 2.33238 (Simulation time: 0 hr 0 min 26 sec) 
+Heartbeat CPU 0 instructions: 20000001 cycles: 8516055 heartbeat IPC: 2.36486 cumulative IPC: 2.34851 (Simulation time: 0 hr 0 min 52 sec) 
+Heartbeat CPU 0 instructions: 30000001 cycles: 12868019 heartbeat IPC: 2.29781 cumulative IPC: 2.33136 (Simulation time: 0 hr 1 min 19 sec) 
+Heartbeat CPU 0 instructions: 40000000 cycles: 17220590 heartbeat IPC: 2.29749 cumulative IPC: 2.3228 (Simulation time: 0 hr 1 min 46 sec) 
+Heartbeat CPU 0 instructions: 50000000 cycles: 21572089 heartbeat IPC: 2.29806 cumulative IPC: 2.31781 (Simulation time: 0 hr 2 min 13 sec) 
+
+Warmup complete CPU 0 instructions: 50000004 cycles: 21572090 (Simulation time: 0 hr 2 min 13 sec) 
+
