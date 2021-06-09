@@ -41,5 +41,5 @@ if [ ! -f "$TRACE_DIR/$TRACE" ] ; then
     exit 1
 fi
 
-mkdir -p results_${N_SIM}M
-(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt
+mkdir -p ${BINARY}_results_${N_SIM}M
+(./bin/${BINARY} -warmup_instructions ${N_WARM}000000 -simulation_instructions ${N_SIM}000000 ${OPTION} -traces ${TRACE_DIR}/${TRACE}) &> ${BINARY}_results_${N_SIM}M/${TRACE}-${BINARY}${OPTION}.txt

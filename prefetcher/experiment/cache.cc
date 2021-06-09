@@ -1,4 +1,4 @@
-#include "cache.h"
+#include "../../inc/cache.h"
 #include "set.h"
 
 #define PREF_CLASS_MASK 0xF00

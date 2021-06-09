@@ -109,7 +109,10 @@ class CACHE : public MEMORY {
              sim_miss[NUM_CPUS][NUM_TYPES],
              roi_access[NUM_CPUS][NUM_TYPES],
              roi_hit[NUM_CPUS][NUM_TYPES],
-             roi_miss[NUM_CPUS][NUM_TYPES];
+             roi_miss[NUM_CPUS][NUM_TYPES],
+	     pref_useful[NUM_CPUS][6],
+             pref_filled[NUM_CPUS][6],
+             pref_late[NUM_CPUS][6];
 
     uint64_t total_miss_latency;
     
@@ -143,6 +146,16 @@ class CACHE : public MEMORY {
             }
         }
 
+	for (uint32_t i = 0; i < NUM_CPUS; i++)
+        {
+            for (uint32_t j = 0; j < 6; j++)
+            {
+                pref_useful[i][j] = 0;
+                pref_filled[i][j] = 0;
+                pref_late[i][j] = 0;
+            }
+        }
+
 	total_miss_latency = 0;
 
         lower_level = NULL;
@@ -164,9 +177,6 @@ class CACHE : public MEMORY {
             delete[] block[i];
         delete[] block;
     };
-
-
-
 
     // functions
     int  add_rq(PACKET *packet),
@@ -225,9 +235,6 @@ class CACHE : public MEMORY {
              find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type),
              llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type),
              lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type);
-
-    //feedback
-    bool is_address_in_mshr(uint64_t address);
 };
 
 #endif

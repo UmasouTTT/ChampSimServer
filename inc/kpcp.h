@@ -1,7 +1,7 @@
 #ifndef KPCP_H
 #define KPCP_H
 
-#include "cache.h"
+#include "old/cache.h"
 
 // L2 SPP
 //#define L2_PF_DEBUG_PRINT
