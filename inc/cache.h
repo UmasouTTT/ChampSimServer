@@ -110,7 +110,7 @@ class CACHE : public MEMORY {
              roi_access[NUM_CPUS][NUM_TYPES],
              roi_hit[NUM_CPUS][NUM_TYPES],
              roi_miss[NUM_CPUS][NUM_TYPES],
-	     pref_useful[NUM_CPUS][6],
+	         pref_useful[NUM_CPUS][6],
              pref_filled[NUM_CPUS][6],
              pref_late[NUM_CPUS][6];
 

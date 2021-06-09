@@ -1,7 +1,7 @@
 #ifndef CACHE_H
 #define CACHE_H
 
-#include "../memory_class.h"
+#include "../../inc/memory_class.h"
 
 // PAGE
 extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;

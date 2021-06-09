@@ -1,7 +1,7 @@
 #ifndef OOO_CPU_H
 #define OOO_CPU_H
 
-#include "old/cache.h"
+#include "../old/before_ipcp_paper/cache.h"
 
 #ifdef CRC2_COMPILE
 #define STAT_PRINTING_PERIOD 1000000
