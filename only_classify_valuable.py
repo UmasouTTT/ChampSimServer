@@ -27,14 +27,18 @@ def get_experiment_result(path):
 def read_ip_value(path):
     ip_value = {}
     f = open(path, "r+", encoding="utf-8")
+    whole_num = 0
     for line in f:
         content = line.strip().split(":")
         ip = content[1].replace(" ","").replace("value", "")
         value = round(float(content[2].replace("appear ", "")), 2)
         appear = int(content[3].replace(" ", "").replace("hit", ""))
+        whole_num += appear
         ip_value[ip] = [value, appear]
-        print("ip:{}, value:{}, appear, {}".format(ip, value, appear))
     f.close()
+
+    for ip in ip_value:
+        print("ip:{}, accuracy:{}, percentage:{}, time:{}".format(ip, ip_value[ip][0], ip_value[ip][1]/whole_num,ip_value[ip][1]))
     return ip_value
 
 def deal_with_ip(ip_value):
