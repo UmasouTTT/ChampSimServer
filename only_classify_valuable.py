@@ -85,6 +85,9 @@ def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
     valuable_ips = deal_with_ip(read_ip_value("ip_value_log.txt"))
     reload_valuable_ips(valuable_ips, important_ip_file)
 
+def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
+    os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
+
 
 
 
@@ -98,6 +101,20 @@ if __name__ == '__main__':
     ip_valuable_analysisor = "bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core"
     prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
+
+    #build
+    branch_predicor = "bimodal"
+    l1i_prefetcher = "no"
+    l1d_prefetcher = "ipcp"
+    l2c_prefetcher = "ipcp"
+    llc_prefetcher = "ipcp"
+    llc_replacement = "lru"
+    core_num = "1"
+
+    #compile
+    print("Start compile {} {} {} {} {} {} {}...".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
+    compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
+
 
 
 
