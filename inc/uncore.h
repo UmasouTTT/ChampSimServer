@@ -2,7 +2,7 @@
 #define UNCORE_H
 
 #include "champsim.h"
-#include "../old/before_ipcp_paper/cache.h"
+#include "cache.h"
 #include "dram_controller.h"
 //#include "drc_controller.h"
 
