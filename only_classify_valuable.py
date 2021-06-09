@@ -33,6 +33,7 @@ def read_ip_value(path):
         value = round(float(content[2].replace("appear ", "")), 2)
         appear = int(content[3].replace(" ", "").replace("hit", ""))
         ip_value[ip] = [value, appear]
+        print("ip:{}, value:{}, appear, {}".format(ip, value, appear))
     f.close()
     return ip_value
 
@@ -96,8 +97,8 @@ if __name__ == '__main__':
     trace_dir = "dpc3_traces"
     result_dir = "results_10M"
     important_ip_file = "important_ips.txt"
-    n_warm = 50
-    n_sim = 200
+    n_warm = 1
+    n_sim = 10
     ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-paper_ipcp-no-lru-1core"
     #prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
@@ -131,6 +132,6 @@ if __name__ == '__main__':
         #bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core
         find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, important_ip_file)
         #print("Start make experiment ...")
-        os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
+        #os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
 
 
