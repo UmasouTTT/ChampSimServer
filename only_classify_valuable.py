@@ -29,16 +29,23 @@ def read_ip_value(path):
     f = open(path, "r+", encoding="utf-8")
     whole_num = 0
     for line in f:
-        content = line.strip().split(":")
-        ip = content[1].replace(" ","").replace("value", "")
-        value = round(float(content[2].replace("appear ", "")), 2)
-        appear = int(content[3].replace(" ", "").replace("hit", ""))
-        whole_num += appear
-        ip_value[ip] = [value, appear]
+        content = line.strip().split("|")
+        ip = content[0].split(":")[-1]
+        value = round(float(content[1].split(":")[-1]), 2)
+        prefetch_num = int(content[2].split(":")[-1])
+        hit = int(content[3].split(":")[-1])
+        ip_frequency = int(content[4].split(":")[-1])
+        whole_num += ip_frequency
+        ip_value[ip] = [value, ip_frequency, prefetch_num, hit]
     f.close()
 
-    for ip in ip_value:
-        print("ip:{}, accuracy:{}, percentage:{}, time:{}".format(ip, ip_value[ip][0], ip_value[ip][1]/whole_num,ip_value[ip][1]))
+    result = sorted(ip_value.items(), key=lambda x: x[1][0], reverse=True)
+
+    for ip in result:
+        print("ip:{}, accuracy:{}, percentage:{}, frequency:{}, prefetch_num:{}".format(ip[0], ip[1][0], round(ip[1][1]/whole_num, 2),
+                                                                                        ip[1][1], ip[1][2]))
+
+
     return ip_value
 
 def deal_with_ip(ip_value):
@@ -72,22 +79,9 @@ def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num
         percentage = deal_with_ip(read_ip_value("log.txt"))
         print(trace.split('.')[1].split('-')[0], percentage)
 
-def make_experiment_by_ip_frequency(trace_dir, prefetcher, n_warm, n_sim, log_path, important_ip_file):
-    #make experiment
-    traces = os.listdir(trace_dir)
-    for trace in traces:
-        find_important_ip(trace, ip_feature_prefetcher, n_warm, n_sim, important_ip_file)
-        os.system("./run_champsim.sh {} {} {} {}".format(ip_classifier_prefetcher, n_warm, n_sim, trace))
-    #get result
-    results = get_experiment_result(result_dir)
-    f = open(log_path, "w+", encoding="utf-8")
-    for trace in results:
-        f.write(trace + " : " + results[trace] + "\n")
-    f.close()
-
 def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
     os.system("./run_champsim.sh {} {} {} {}".format(prefetcher, n_warm, n_sim, trace))
-    valuable_ips = deal_with_ip(read_ip_value("ip_value_log.txt"))
+    valuable_ips = deal_with_ip(read_ip_value("ip_value_l1.txt"))
     reload_valuable_ips(valuable_ips, important_ip_file)
 
 def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
@@ -103,7 +97,7 @@ if __name__ == '__main__':
     important_ip_file = "important_ips.txt"
     n_warm = 1
     n_sim = 10
-    ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-paper_ipcp-no-lru-1core"
+    ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-no-no-lru-1core"
     #prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
     ip_classify_paper = "bimodal-no-paper_ipcp_ip_classify_v1-no-no-lru-1core"
@@ -113,7 +107,7 @@ if __name__ == '__main__':
     branch_predicor = "bimodal"
     l1i_prefetcher = "no"
     l1d_prefetcher = "paper_ipcp_value"
-    l2c_prefetcher = "paper_ipcp"
+    l2c_prefetcher = "no"
     llc_prefetcher = "no"
     llc_replacement = "lru"
     core_num = "1"
@@ -122,9 +116,9 @@ if __name__ == '__main__':
     print("Start compile {} {} {} {} {} {} {}...".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
-    l1d_prefetcher = "paper_ipcp_ip_classify_v1"
-    l2c_prefetcher = "no"
-    compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
+    # l1d_prefetcher = "paper_ipcp_ip_classify_v1"
+    # l2c_prefetcher = "no"
+    # compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
 
 

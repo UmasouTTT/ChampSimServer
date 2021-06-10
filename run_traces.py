@@ -29,11 +29,11 @@ def make_one_experiment(trace_dir, result_dir, prefetcher, n_warm, n_sim, log_pa
         if num > case_num:
             break
     #get result
-    # results = get_experiment_result(result_dir)
-    # f = open(log_path, "w+", encoding="utf-8")
-    # for trace in results:
-    #     f.write(trace + " : " + results[trace] + "\n")
-    # f.close()
+    results = get_experiment_result(result_dir)
+    f = open(log_path, "w+", encoding="utf-8")
+    for trace in results:
+        f.write(trace + " : " + results[trace] + "\n")
+    f.close()
 
 
 if __name__ == '__main__':
