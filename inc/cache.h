@@ -52,7 +52,8 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 #define L1I_LATENCY 4
 
 // L1 DATA CACHE
-#define L1D_SET 64
+//#define L1D_SET 64
+#define L1D_SET 1024
 #define L1D_WAY 12
 #define L1D_RQ_SIZE 64
 #define L1D_WQ_SIZE 64 
@@ -77,6 +78,7 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 #define LLC_PQ_SIZE NUM_CPUS*32
 #define LLC_MSHR_SIZE NUM_CPUS*64
 #define LLC_LATENCY 20  // 4/5 (L1I or L1D) + 10 + 20 = 34/35 cycles
+
 
 class CACHE : public MEMORY {
   public:

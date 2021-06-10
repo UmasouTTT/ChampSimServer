@@ -18,6 +18,11 @@ storage for various hardware tables.
 
 
 #include "cache.h"
+#include <vector>
+#include <map>
+#include "log.h"
+
+using namespace std;
 
 #define DO_PREF
 
@@ -196,6 +201,52 @@ void stat_col_L2(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
     }
 }
 
+//find valuable ips
+map<uint64_t, uint64_t>ip_appear_l2;
+map<uint64_t, uint64_t>ip_hit_l2;
+map<uint64_t, vector<uint64_t>>ip_prefAddr_l2;
+ChampSimLog cslogl2("ip_value_l2.txt");
+
+void init_ip_l2(uint64_t ip){
+    if(ip_appear_l2.end() == ip_appear_l2.find(ip)){
+        ip_appear_l2[ip] = 0;
+    }
+    if(ip_hit_l2.end() == ip_hit_l2.find(ip)){
+        ip_hit_l2[ip] = 0;
+    }
+}
+
+void update_when_prefetch_l2(uint64_t ip, uint64_t pref_addr){
+    ip_appear_l2[ip] += 1;
+    if (ip_prefAddr_l2.find(ip) == ip_prefAddr_l2.end()){
+        ip_prefAddr_l2[ip] = vector<uint64_t>();
+    }
+    ip_prefAddr_l2[ip].push_back(pref_addr);
+}
+
+void update_when_operate_l2(uint64_t addr){
+    for (auto ip_itor = ip_prefAddr_l2.begin() ; ip_itor != ip_prefAddr_l2.end(); ip_itor++) {
+        for (auto addr_itor = ip_itor->second.begin();addr_itor != ip_itor->second.end()  ; addr_itor++) {
+            if (addr == (*addr_itor)){
+                ip_hit_l2[ip_itor->first] += 1;
+                ip_prefAddr_l2[ip_itor->first].erase(addr_itor);
+                break;
+            }
+        }
+    }
+}
+
+void update_when_evict_l2(uint64_t addr){
+    for (auto ip_itor = ip_prefAddr_l2.begin() ; ip_itor != ip_prefAddr_l2.end(); ip_itor++) {
+        for (auto addr_itor = ip_itor->second.begin();addr_itor != ip_itor->second.end()  ; addr_itor++) {
+            if (addr == (*addr_itor)){
+                ip_prefAddr_l2[ip_itor->first].erase(addr_itor);
+                break;
+            }
+        }
+    }
+}
+
 void CACHE::l2c_prefetcher_initialize() 
 {
 
@@ -203,6 +254,10 @@ void CACHE::l2c_prefetcher_initialize()
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
+    //find valuable ips
+    init_ip_l2(ip);
+    update_when_operate_l2(addr);
+
     uint64_t page = addr >> LOG2_PAGE_SIZE;
     uint64_t curr_tag = (page ^ (page >> 6) ^ (page >> 12)) & ((1<<NUM_IP_TAG_BITS_L2)-1);
     uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F;
@@ -240,6 +295,9 @@ int index = ip & ((1 << NUM_IP_INDEX_BITS_L2)-1);
 	if ((pf_address >> LOG2_PAGE_SIZE) == (addr >> LOG2_PAGE_SIZE))
 	{
         	#ifdef DO_PREF
+	        //find valuable ips
+            update_when_prefetch_l2(ip, pf_address);
+
         	prefetch_line(ip, addr, pf_address, FILL_L2, 0);
         	#endif
         	SIG_DP(cout << "1, ");
@@ -280,6 +338,9 @@ cout << ", " << stride << "; ";
                     break;
                 num_prefs++;
                 #ifdef DO_PREF
+                //find valuable ips
+                update_when_prefetch_l2(ip, pf_address);
+
                 prefetch_line(ip, addr, pf_address, FILL_L2,metadata);
                 #endif
                 SIG_DP(cout << trackers[cpu][index].stride << ", ");
@@ -300,6 +361,9 @@ if(num_prefs == 0 && spec_nl_l2[cpu] == 1){                                     
     uint32_t metadata = encode_metadata_l2(1, NL_TYPE, spec_nl_l2[cpu]);
     trackers[cpu][index].pref_type = 3;
     #ifdef DO_PREF
+    //find valuable ips
+    update_when_prefetch_l2(ip, pf_address);
+
     prefetch_line(ip, addr, pf_address, FILL_L2, metadata);
     #endif
     SIG_DP(cout << "1, ");
@@ -312,16 +376,18 @@ return metadata_in;
 
 uint32_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
 {
+        //find valuable ips
+        update_when_evict_l2(addr);
 
-if(prefetch){
-uint32_t pref_type = metadata_in & 0xF00;
-pref_type = pref_type >> 8;
+        if(prefetch){
+        uint32_t pref_type = metadata_in & 0xF00;
+        pref_type = pref_type >> 8;
 
-uint64_t index = hash_bloom_l2(addr);
-if(stats_l2[cpu][pref_type].bl_request[index] == 1){
-    stats_l2[cpu][pref_type].bl_filled[index] = 1;
-    stats_l2[cpu][pref_type].bl_request[index] = 0;
-}
+        uint64_t index = hash_bloom_l2(addr);
+        if(stats_l2[cpu][pref_type].bl_request[index] == 1){
+            stats_l2[cpu][pref_type].bl_filled[index] = 1;
+            stats_l2[cpu][pref_type].bl_request[index] = 0;
+        }
 }
 
 return metadata_in;
@@ -329,5 +395,22 @@ return metadata_in;
 
 void CACHE::l2c_prefetcher_final_stats()
 {
-
+    //find valuable ips
+    for (auto it = ip_appear_l2.begin(); it != ip_appear_l2.end() ; it++) {
+        uint64_t ip = it->first;
+        uint64_t appear = it->second;
+        uint64_t hit = 0;
+        if(ip_hit_l2.find(ip) != ip_hit_l2.end()){
+            hit = ip_hit_l2[ip];
+        }
+         float value;
+            if (appear == 0){
+               value = 0;
+            }
+            else{
+               value = (float) hit / (float) appear;
+            }
+        cslogl2.makeLog(string("ip: " + to_string(ip) + "|value :" + to_string(value) + "|appear : " + to_string(appear)
+                             + "|hit :" + to_string(hit)), true);
+    }
 }

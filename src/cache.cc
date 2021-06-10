@@ -632,11 +632,11 @@ void CACHE::handle_read()
                 if (block[set][way].prefetch) {
                     pf_useful++;
                     block[set][way].prefetch = 0;
-		    if (block[set][way].pref_class < 5) //modify
-          	    {
-           		 pref_useful[cpu][block[set][way].pref_class]++;
-          	    }
-                }
+                    if (block[set][way].pref_class < 5) //modify
+                        {
+                         pref_useful[cpu][block[set][way].pref_class]++;
+                        }
+            }
                 block[set][way].used = 1;
 
                 HIT[RQ.entry[index].type]++;
