@@ -50,14 +50,14 @@ def read_ip_value(path):
 
 def deal_with_ip(ip_value):
     valuable_ips = []
-    for ip in ip_value:
-        if ip_value[ip][0] >= 0.8:
-            valuable_ips.append(ip)
-        # if ip_value[ip][1] >= 1000:
-        #     valuable_ips.append(ip)
-        else:
-            print("valuless ip : {}".format(ip_value[ip]))
-    print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
+    # for ip in ip_value:
+    #     if ip_value[ip][0] >= 0.8:
+    #         valuable_ips.append(ip)
+    #     # if ip_value[ip][1] >= 1000:
+    #     #     valuable_ips.append(ip)
+    #     else:
+    #         print("valuless ip : {}".format(ip_value[ip]))
+    # print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
     return valuable_ips
 
 def reload_valuable_ips(valuable_ips, reload_path):
