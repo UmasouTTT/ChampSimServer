@@ -50,14 +50,14 @@ def read_ip_value(path):
 
 def deal_with_ip(ip_value):
     valuable_ips = []
-    # for ip in ip_value:
-    #     if ip_value[ip][0] >= 0.8:
-    #         valuable_ips.append(ip)
-    #     # if ip_value[ip][1] >= 1000:
-    #     #     valuable_ips.append(ip)
-    #     else:
-    #         print("valuless ip : {}".format(ip_value[ip]))
-    # print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
+    for ip in ip_value:
+        if ip_value[ip][0] > 0:
+            valuable_ips.append(ip)
+        # if ip_value[ip][1] >= 1000:
+        #     valuable_ips.append(ip)
+        else:
+            print("valuless ip : {}".format(ip_value[ip]))
+    print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
     return valuable_ips
 
 def reload_valuable_ips(valuable_ips, reload_path):
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-no-no-lru-1core"
     #prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
-    ip_classify_paper = "bimodal-no-paper_ipcp_ip_classify_v1-no-no-lru-1core"
+    ip_classify_paper = "bimodal-no-paper_ipcp_ip_classify_septrain-time_pref-no-lru-1core"
     #ip_classify_paper_compare = "bimodal-no-paper_ipcp_ip_classify_v1-paper_ipcp-no-lru-1core"
 
     #build
@@ -116,9 +116,9 @@ if __name__ == '__main__':
     print("Start compile {} {} {} {} {} {} {}...".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
-    # l1d_prefetcher = "paper_ipcp_ip_classify_v1"
-    # l2c_prefetcher = "no"
-    # compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
+    l1d_prefetcher = "paper_ipcp_ip_classify_septrain"
+    l2c_prefetcher = "time_pref"
+    compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
 
 
@@ -130,6 +130,6 @@ if __name__ == '__main__':
         #bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core
         find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, important_ip_file)
         #print("Start make experiment ...")
-        #os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
+        os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
 
 

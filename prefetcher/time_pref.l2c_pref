@@ -28,7 +28,7 @@ const double DOWN_HIT_RATE=0.15;
 #define PREFETCH_DEGREE_MIN 3
 
 #define L2_THRESHOLD 0.6//没用
-#define LLC_THRESHOLD 0.2//没用 
+#define LLC_THRESHOLD 0.2//没用
 #define L2_MAX_THRESHOLD 1
 #define L2_MIN_THRESHOLD 0.2
 #define LLC_MAX_THRESHOLD 1
@@ -361,8 +361,8 @@ public:
 
     void insert(int delta)
     {
-       if(delta==0)
-           return;
+        if(delta==0)
+            return;
         if(data.find(delta)==data.end())
         {
             uint64_t cur_conf=0;
@@ -483,7 +483,7 @@ public:
                 {
                     if(SAMEPAGE(base_addr,base_addr+cur_deltas[i].first))
                     {
-                       res.push_back(make_pair(base_addr+cur_deltas[i].first,FILL_L2));
+                        res.push_back(make_pair(base_addr+cur_deltas[i].first,FILL_L2));
                     }
                 }
                 else if(cur_prob>=fill_llc_threshold)
@@ -544,10 +544,10 @@ public:
             {
                 // if(i->pc!=pc)
                 // {
-                 int delta=addr-i->addr;
+                int delta=addr-i->addr;
                 res.push_back(make_pair(i->pc,delta));
                 // }
-            
+
             }
         }
         return res;
@@ -851,13 +851,13 @@ public:
     {
         pc=TRUNCATE(pc,PC_WIDTH);
         addr=TRUNCATE(addr,ADDR_WIDTH);
-         iptable.train(pc,addr,signaturetable);
-         delayqueue.dq_pop(recentrequest,current_cycle);
+        iptable.train(pc,addr,signaturetable);
+        delayqueue.dq_pop(recentrequest,current_cycle);
         if(train_all||(cache_hit==0))
         {
             iptable.train(recentrequest.train(pc,addr));
         }
-         delayqueue.dq_push(pc,addr,current_cycle,recentrequest);
+        delayqueue.dq_push(pc,addr,current_cycle,recentrequest);
     }
 
     vector<pair<uint64_t,int>> prefetch(uint32_t cpu,uint64_t pc,uint64_t addr,int degree,double fill_l2_threshold,double fill_llc_threshold)
@@ -867,8 +867,8 @@ public:
         vector<pair<uint64_t,int>> res;
         vector<pair<uint64_t,int>> same_ip_pf;
         vector<pair<uint64_t,int>> ip_next_pf;
-        if(signature!=0)
-            same_ip_pf=signaturetable.prefetch(signature,addr,degree,fill_l2_threshold,fill_llc_threshold);
+//        if(signature!=0)
+//            same_ip_pf=signaturetable.prefetch(signature,addr,degree,fill_l2_threshold,fill_llc_threshold);
         if(!same_ip_pf.empty())
         {
             trigger_ip_signature[cpu]++;
@@ -896,7 +896,7 @@ public:
             }
         }
         if(res.empty()&&(SAMEPAGE(addr,addr+1)))
-        res.push_back(make_pair(addr+1,FILL_LLC));
+            res.push_back(make_pair(addr+1,FILL_LLC));
         sort(res.begin(),res.end(),[](pair<uint64_t,int> i,pair<uint64_t,int> j)->bool{return i.second<j.second;});
         return res;
     }
@@ -916,55 +916,55 @@ vector<double> FILL_L2_THRESHOLD(NUM_CPUS,L2_THRESHOLD);
 vector<double> FILL_LLC_THRESHOLD(NUM_CPUS,LLC_THRESHOLD);
 vector<int> DEGREE(NUM_CPUS,PREFETCH_DEGREE);
 
-void CACHE::l2c_prefetcher_initialize() 
+void CACHE::l2c_prefetcher_initialize()
 {
 
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
-    stats.prefetcher_operate(addr,ip,cache_hit,type);
+    //stats.prefetcher_operate(addr,ip,cache_hit,type);
     uint64_t base_addr=(addr>>LOG2_BLOCK_SIZE);
-    lp[cpu].train(ip,base_addr,cache_hit,current_core_cycle[cpu]);
-    if(cache_hit)
-    {
-        ft[cpu].update(base_addr);
-    }
-    double hit_rate=0.6;
-     if((pf_useful+pf_useless)%256==0)
-    {
-        uint64_t cur_fill=(pf_useful+pf_useless)-last_pf_fill[cpu];
-        if(cur_fill!=0)
-        {
-            hit_rate=(double)(pf_useful-last_pf_hit[cpu])/(pf_useful+pf_useless-last_pf_fill[cpu]);
-        }
-        last_pf_fill[cpu]=pf_useful+pf_useless;
-        last_pf_hit[cpu]=pf_useful;
-    }
-#ifdef Dynamic_Adjustment
-    if(hit_rate>=L2_THRESHOLD_UP_HIT_RATE)
-    {
-      FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]-0.025<=L2_MIN_THRESHOLD)?L2_MIN_THRESHOLD:FILL_L2_THRESHOLD[cpu]-0.025;
-    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
-    }
-    else if(hit_rate<=L2_THRESHOLD_DOWN_HIT_RATE)
-    {
-        FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]+0.025>=L2_MAX_THRESHOLD)?L2_MAX_THRESHOLD:FILL_L2_THRESHOLD[cpu]+0.025;
-        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
-    }
-    if(hit_rate>=UP_HIT_RATE)
-    {
-      DEGREE[cpu]=(DEGREE[cpu]>=PREFETCH_DEGREE_MAX)?PREFETCH_DEGREE_MAX:(DEGREE[cpu]+1);
-    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
-    }
-    else if(hit_rate<=DOWN_HIT_RATE)
-    {
-        DEGREE[cpu]=(DEGREE[cpu]<=PREFETCH_DEGREE_MIN)?PREFETCH_DEGREE_MIN:(DEGREE[cpu]-1);
-        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
-
-    }
-#endif    
-   vector<pair<uint64_t,int>> pf_address=lp[cpu].prefetch(cpu,ip,base_addr,DEGREE[cpu],FILL_L2_THRESHOLD[cpu],FILL_LLC_THRESHOLD[cpu]);
+//    lp[cpu].train(ip,base_addr,cache_hit,current_core_cycle[cpu]);
+//    if(cache_hit)
+//    {
+//        ft[cpu].update(base_addr);
+//    }
+//    double hit_rate=0.6;
+//    if((pf_useful+pf_useless)%256==0)
+//    {
+//        uint64_t cur_fill=(pf_useful+pf_useless)-last_pf_fill[cpu];
+//        if(cur_fill!=0)
+//        {
+//            hit_rate=(double)(pf_useful-last_pf_hit[cpu])/(pf_useful+pf_useless-last_pf_fill[cpu]);
+//        }
+//        last_pf_fill[cpu]=pf_useful+pf_useless;
+//        last_pf_hit[cpu]=pf_useful;
+//    }
+//#ifdef Dynamic_Adjustment
+//    if(hit_rate>=L2_THRESHOLD_UP_HIT_RATE)
+//    {
+//      FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]-0.025<=L2_MIN_THRESHOLD)?L2_MIN_THRESHOLD:FILL_L2_THRESHOLD[cpu]-0.025;
+//    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
+//    }
+//    else if(hit_rate<=L2_THRESHOLD_DOWN_HIT_RATE)
+//    {
+//        FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]+0.025>=L2_MAX_THRESHOLD)?L2_MAX_THRESHOLD:FILL_L2_THRESHOLD[cpu]+0.025;
+//        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
+//    }
+//    if(hit_rate>=UP_HIT_RATE)
+//    {
+//      DEGREE[cpu]=(DEGREE[cpu]>=PREFETCH_DEGREE_MAX)?PREFETCH_DEGREE_MAX:(DEGREE[cpu]+1);
+//    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
+//    }
+//    else if(hit_rate<=DOWN_HIT_RATE)
+//    {
+//        DEGREE[cpu]=(DEGREE[cpu]<=PREFETCH_DEGREE_MIN)?PREFETCH_DEGREE_MIN:(DEGREE[cpu]-1);
+//        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
+//
+//    }
+//#endif
+    vector<pair<uint64_t,int>> pf_address=lp[cpu].prefetch(cpu,ip,base_addr,DEGREE[cpu],FILL_L2_THRESHOLD[cpu],FILL_LLC_THRESHOLD[cpu]);
     for(auto i=0;i<pf_address.size();i++)
     {
         if(ft[cpu].insert(pf_address[i].first))
@@ -975,47 +975,47 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
             }
             else
             {
-                 ((CACHE *)lower_level)->cpu=cpu;
+                ((CACHE *)lower_level)->cpu=cpu;
                 ((CACHE *)lower_level)->prefetch_line(ip,addr,((pf_address[i].first)<<LOG2_BLOCK_SIZE),FILL_LLC,0);
-                 ((CACHE *)lower_level)->cpu=0;
-            } 
-        }    
+                ((CACHE *)lower_level)->cpu=0;
+            }
+        }
     }
-  return metadata_in;
+    return metadata_in;
 }
 
 uint32_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
 {
-  stats.prefetcher_cache_fill(addr,set,way,prefetch,evicted_addr);
-  ft[cpu].eviction((evicted_addr>>LOG2_BLOCK_SIZE));
-  return metadata_in;
+   // stats.prefetcher_cache_fill(addr,set,way,prefetch,evicted_addr);
+   // ft[cpu].eviction((evicted_addr>>LOG2_BLOCK_SIZE));
+    return metadata_in;
 }
 
-void CACHE::l2c_prefetcher_inform_warmup_complete()
-{
-stats.prefetcher_inform_warmup_complete();
-    last_pf_fill[cpu]=0;
-    last_pf_hit[cpu]=0;
-    trigger_ip_signature[cpu]=0;
-    trigger_ip_delay[cpu]=0;
-}
-
-void CACHE::l2c_prefetcher_inform_roi_complete()
-{
-stats.prefetcher_inform_roi_complete();
-}
-
-void CACHE::l2c_prefetcher_roi_stats()
-{
-stats.prefetcher_roi_stats(cpu,string("L2"));
-cout<<"trigger ip signature: "<<trigger_ip_signature[cpu]<<endl;
-cout<<"trigger  ip delay: "<<trigger_ip_delay[cpu]<<endl;
-cout<<"Prefetch degree: "<< DEGREE[cpu]<<endl;
-cout<<"Fill L2 threshold: "<<FILL_L2_THRESHOLD[cpu]<<endl;
-cout<<"Fill LLC threshold: "<<FILL_LLC_THRESHOLD[cpu]<<endl;
-}
-
+//void CACHE::l2c_prefetcher_inform_warmup_complete()
+//{
+//    stats.prefetcher_inform_warmup_complete();
+//    last_pf_fill[cpu]=0;
+//    last_pf_hit[cpu]=0;
+//    trigger_ip_signature[cpu]=0;
+//    trigger_ip_delay[cpu]=0;
+//}
+//
+//void CACHE::l2c_prefetcher_inform_roi_complete()
+//{
+//    stats.prefetcher_inform_roi_complete();
+//}
+//
+//void CACHE::l2c_prefetcher_roi_stats()
+//{
+//    stats.prefetcher_roi_stats(cpu,string("L2"));
+//    cout<<"trigger ip signature: "<<trigger_ip_signature[cpu]<<endl;
+//    cout<<"trigger  ip delay: "<<trigger_ip_delay[cpu]<<endl;
+//    cout<<"Prefetch degree: "<< DEGREE[cpu]<<endl;
+//    cout<<"Fill L2 threshold: "<<FILL_L2_THRESHOLD[cpu]<<endl;
+//    cout<<"Fill LLC threshold: "<<FILL_LLC_THRESHOLD[cpu]<<endl;
+//}
+//
 void CACHE::l2c_prefetcher_final_stats()
 {
-
+//
 }

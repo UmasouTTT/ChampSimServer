@@ -909,7 +909,7 @@ void CACHE::l1d_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way,
 {
 
     //find valuable ip
-    update_when_evict(addr);
+    update_when_evict(evicted_addr);
 
     if(prefetch){
         uint32_t pref_type = metadata_in & 0xF00;

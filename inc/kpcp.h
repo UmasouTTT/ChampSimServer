@@ -1,7 +1,7 @@
 #ifndef KPCP_H
 #define KPCP_H
 
-#include "../old/before_ipcp_paper/cache.h"
+#include "../old/before_ipcp_paper/cachekaichao.txt"
 
 // L2 SPP
 //#define L2_PF_DEBUG_PRINT
