@@ -95,8 +95,8 @@ if __name__ == '__main__':
     trace_dir = "dpc3_traces"
     result_dir = "results_10M"
     important_ip_file = "important_ips.txt"
-    n_warm = 1
-    n_sim = 10
+    n_warm = 50
+    n_sim = 200
     ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-no-no-lru-1core"
     #prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
