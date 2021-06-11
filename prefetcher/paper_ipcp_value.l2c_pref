@@ -401,7 +401,7 @@ return metadata_in;
 void CACHE::l2c_prefetcher_final_stats()
 {
     //find valuable ips
-    for (auto it = ip_appear_l2.begin(); it != ip_appear_l2.end() ; it++) {
+   for (auto it = ip_appear_l2.begin(); it != ip_appear_l2.end() ; it++) {
         uint64_t ip = it->first;
         uint64_t appear = it->second;
         uint64_t hit = 0;

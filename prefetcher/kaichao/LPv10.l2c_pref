@@ -851,8 +851,8 @@ public:
     {
         pc=TRUNCATE(pc,PC_WIDTH);
         addr=TRUNCATE(addr,ADDR_WIDTH);
-         iptable.train(pc,addr,signaturetable);
-         delayqueue.dq_pop(recentrequest,current_cycle);
+        iptable.train(pc,addr,signaturetable);
+        delayqueue.dq_pop(recentrequest,current_cycle);
         if(train_all||(cache_hit==0))
         {
             iptable.train(recentrequest.train(pc,addr));
