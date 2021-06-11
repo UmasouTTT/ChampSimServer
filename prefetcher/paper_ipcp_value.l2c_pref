@@ -202,6 +202,7 @@ void stat_col_L2(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
 }
 
 //find valuable ips
+map<uint64_t, uint64_t>ip_frequency_l2;
 map<uint64_t, uint64_t>ip_appear_l2;
 map<uint64_t, uint64_t>ip_hit_l2;
 map<uint64_t, vector<uint64_t>>ip_prefAddr_l2;
@@ -257,6 +258,10 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     //find valuable ips
     init_ip_l2(ip);
     update_when_operate_l2(addr);
+    if(ip_frequency_l2.end() == ip_frequency_l2.find(ip)){
+                ip_frequency_l2[ip] = 0;
+        }
+    ip_frequency_l2[ip] += 1;
 
     uint64_t page = addr >> LOG2_PAGE_SIZE;
     uint64_t curr_tag = (page ^ (page >> 6) ^ (page >> 12)) & ((1<<NUM_IP_TAG_BITS_L2)-1);
@@ -377,7 +382,7 @@ return metadata_in;
 uint32_t CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
 {
         //find valuable ips
-        update_when_evict_l2(addr);
+        update_when_evict_l2(evicted_addr);
 
         if(prefetch){
         uint32_t pref_type = metadata_in & 0xF00;
@@ -403,14 +408,14 @@ void CACHE::l2c_prefetcher_final_stats()
         if(ip_hit_l2.find(ip) != ip_hit_l2.end()){
             hit = ip_hit_l2[ip];
         }
-         float value;
-            if (appear == 0){
-               value = 0;
-            }
-            else{
-               value = (float) hit / (float) appear;
-            }
-        cslogl2.makeLog(string("ip: " + to_string(ip) + "|value :" + to_string(value) + "|appear : " + to_string(appear)
-                             + "|hit :" + to_string(hit)), true);
+        float value;
+        if (appear == 0){
+           value = 0;
+        }
+        else{
+           value = (float) hit / (float) appear;
+        }
+        cslogl2.makeLog(string("ip: " + to_string(ip) + "|value :" + to_string(value) + "|prefetch_frequency : " + to_string(appear)
+                             + "|hit :" + to_string(hit) + "|frequency :" + to_string(ip_frequency_l2[ip])), true);
     }
 }
