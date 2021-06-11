@@ -38,7 +38,7 @@ vice versa in the cache's MSHR as, if the prefetch would've been on time, the de
 
 #define DO_PREF
 #define NUM_BLOOM_ENTRIES 4096				    // For book-keeping purposes
-#define NUM_IP_TABLE_L1_ENTRIES 2048
+#define NUM_IP_TABLE_L1_ENTRIES 64
 #define NUM_CSPT_ENTRIES 128			   	    // = 2^NUM_SIG_BITS
 #define NUM_SIG_BITS 7					    // num of bits in signature
 #define NUM_IP_INDEX_BITS 6 	
