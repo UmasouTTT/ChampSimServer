@@ -117,7 +117,7 @@ if __name__ == '__main__':
     ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-paper_ipcp_value-no-lru-1core"
     #prefetcher = "bimodal-no-ip_classifier_v2_value_ip-ip_classifier_v1-no-lru-1core"
     #prefetcher = "bimodal-no-classifier_v3_only_classify-no-no-lru-1core"
-    ip_classify_paper = "bimodal-no-paper_ipcp_ip_classify_septrain-time_pref-no-lru-1core"
+    ip_classify_paper = "bimodal-no-paper_ipcp_ip_classify-ipcp_isca2020-no-lru-1core"
     #ip_classify_paper_compare = "bimodal-no-paper_ipcp_ip_classify_v1-paper_ipcp-no-lru-1core"
 
     #build
@@ -133,8 +133,8 @@ if __name__ == '__main__':
     print("Start compile {} {} {} {} {} {} {}...".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
-    l1d_prefetcher = "paper_ipcp_ip_classify_septrain"
-    l2c_prefetcher = "time_pref"
+    l1d_prefetcher = "paper_ipcp_ip_classify"
+    l2c_prefetcher = "ipcp_isca2020"
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
 

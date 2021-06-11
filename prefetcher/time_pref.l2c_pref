@@ -277,248 +277,6 @@ Repl<T1,T2>* Repl<T1,T2>::create_repl(vector<map<T1,T2>> *entry,ReplType type)
 
 /* 替换策略架构完成*/
 
-/*过滤表*/
-class FilterTable
-{
-public:
-    FilterTable():data(){}
-
-    bool insert(uint64_t addr)
-    {
-        bool res=true;
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            if(i->first==addr)
-            {
-                res=false;
-                break;
-            }
-        }
-        if(res)
-        {
-            while(data.size()>=FILTER_TABLE_SIZE)
-            {
-                data.pop_front();
-            }
-            data.push_back(make_pair(addr,false));
-        }
-        return res;
-    }
-
-    void update(uint64_t addr)
-    {
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            if(i->first==addr)
-            {
-                i->second=true;
-            }
-        }
-    }
-
-    void eviction(uint64_t addr)
-    {
-        for(auto i=data.begin();i!=data.end();)
-        {
-            if(i->first==addr)
-            {
-                i=data.erase(i);
-            }
-            else
-                i++;
-        }
-    }
-
-    double get_reduce()
-    {
-        double useful=0;
-        if(data.empty())
-            return 1;
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            if(i->second)
-                useful++;
-        }
-        return useful/data.size();
-    }
-
-    void reset()
-    {
-        data.clear();
-    }
-private:
-    deque<pair<uint64_t,bool>> data;
-};
-
-//Signature Table
-struct SignatureTableEntry
-{
-public:
-    map<int,uint64_t> data;
-    ReplMetrics repl_metrics;
-
-    SignatureTableEntry():data(),repl_metrics(){}
-
-    void insert(int delta)
-    {
-        if(delta==0)
-            return;
-        if(data.find(delta)==data.end())
-        {
-            uint64_t cur_conf=0;
-            while(data.size()>=SIGNATURE_DELTA_SIZE)
-            {
-                int victim_delta=find_victim();
-                // cur_conf=data[victim_delta];
-                data.erase(victim_delta);
-            }
-            data.insert(make_pair(delta,cur_conf));
-        }
-        increase(delta);
-    }
-
-    vector<pair<int,double>> get_info()
-    {
-        vector<pair<int,double>> res;
-        double sum=0;
-        if(data.empty())
-            return res;
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            sum+=i->second;
-        }
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            res.push_back(make_pair(i->first,i->second/sum));
-        }
-        return res;
-    }
-
-private:
-    int find_victim()
-    {
-        int victim_delta=data.begin()->first;
-        for(auto i=data.begin();i!=data.end();i++)
-        {
-            if(i->second<data[victim_delta])
-                victim_delta=i->first;
-        }
-        return victim_delta;
-    }
-
-    void increase(int delta)
-    {
-        assert(data.find(delta)!=data.end());
-        if(data[delta]>=SIGNATURE_CONF_MAX)
-        {
-            for(auto i=data.begin();i!=data.end();i++)
-            {
-                i->second=((i->second)>>1);
-            }
-        }
-        data[delta]++;
-    }
-
-};
-
-class SignatureTable{
-public:
-    SignatureTable():data(SIGNATURE_TABLE_SET)
-    {
-        repl=Repl<uint64_t,SignatureTableEntry>::create_repl(&data,REPL_LRU);
-    }
-
-    void update(uint64_t signature,int delta)
-    {
-        uint64_t set_id=TRUNCATE(signature,LOG2_SIGNATURE_TABLE_SET);
-        uint64_t tag=(signature>>LOG2_SIGNATURE_TABLE_SET);
-        if(data[set_id].find(tag)==data[set_id].end())
-        {
-            while(data[set_id].size()>=SIGNATURE_TABLE_WAY)
-            {
-                uint64_t victim_tag=repl->findVictim(set_id);
-                data[set_id].erase(victim_tag);
-            }
-            data[set_id].insert(make_pair(tag,SignatureTableEntry()));
-        }
-//        if(data[set_id][tag].delta==delta)
-//        {
-//            data[set_id][tag].conf++;
-//            if(data[set_id][tag].conf>SIGNATURE_CONF_MAX)
-//                data[set_id][tag].conf=SIGNATURE_CONF_MAX;
-//        }
-//        else
-//        {
-//            if(data[set_id][tag].conf==0)
-//                data[set_id][tag].delta=delta;
-//            else
-//                data[set_id][tag].conf--;
-//        }
-        data[set_id][tag].insert(delta);
-        repl->setEntry(set_id,tag);
-    }
-
-    vector<pair<uint64_t,int>> prefetch(uint64_t signature,uint64_t base_addr,int degree,double fill_l2_threshold,double fill_llc_threshold)
-    {
-        double prob=1;
-        vector<pair<uint64_t,int>> res;
-        int pf_degree=0;
-        while((prob>=fill_llc_threshold)&&(pf_degree<degree))
-        {
-            pf_degree++;
-            uint64_t set_id=TRUNCATE(signature,LOG2_SIGNATURE_TABLE_SET);
-            uint64_t tag=(signature>>LOG2_SIGNATURE_TABLE_SET);
-            if(data[set_id].find(tag)==data[set_id].end())
-                break;
-            vector<pair<int,double>>cur_deltas=data[set_id][tag].get_info();
-            sort(cur_deltas.begin(),cur_deltas.end(),[](pair<int,double> i,pair<int,double>j)->bool{return i.second>j.second;});
-            if(cur_deltas.empty())
-                break;
-            for(auto i=0;i<cur_deltas.size();i++)
-            {
-                if(cur_deltas[i].first==0)
-                    continue;
-                double cur_prob=cur_deltas[i].second*prob;
-                if(cur_prob>=fill_l2_threshold)
-                {
-                    if(SAMEPAGE(base_addr,base_addr+cur_deltas[i].first))
-                    {
-                        res.push_back(make_pair(base_addr+cur_deltas[i].first,FILL_L2));
-                    }
-                }
-                else if(cur_prob>=fill_llc_threshold)
-                {
-                    if(SAMEPAGE(base_addr,base_addr+cur_deltas[i].first))
-                    {
-                        res.push_back(make_pair(base_addr+cur_deltas[i].first,FILL_LLC));
-                    }
-                }
-                else
-                    break;
-            }
-            if(cur_deltas[0].first==0)
-                break;
-            if(!SAMEPAGE(base_addr,base_addr+cur_deltas[0].first))
-                break;
-            prob=cur_deltas[0].second*prob;
-            base_addr=base_addr+cur_deltas[0].first;
-            signature=update_signature(signature,cur_deltas[0].first);
-        }
-        return res;
-    }
-
-private:
-    uint64_t update_signature(uint64_t signature,int delta)
-    {
-        delta = (delta < 0) ? (((-1) * delta) + (1 << LOG2_BLOCK_SIZE)): delta;
-        uint64_t new_signature=bitset<SIGNATURE_BITS>((signature<<LEFT_MOVE_BITS)^delta).to_ullong();
-        return new_signature;
-    }
-
-    vector<map<uint64_t,SignatureTableEntry>> data;
-    Repl<uint64_t,SignatureTableEntry> *repl;
-};
-
 //RecentRequest
 class RecentRequest{
 public:
@@ -706,11 +464,10 @@ private:
 
 struct IPTableEntry{
 
-    IPTableEntry():last_page(0),last_offset(0),signature(0),metadata(),repl_metrics(){}
+    IPTableEntry():last_page(0),last_offset(0),metadata(),repl_metrics(){}
 
-    uint64_t last_page;
-    uint64_t last_offset;
-    uint64_t signature;
+
+
     MetaData metadata;
     ReplMetrics repl_metrics;
 };
@@ -829,12 +586,6 @@ private:
         return (page&((1<<PAGE_BITS)-1));
     }
 
-    uint64_t update_signature(uint64_t signature,int delta)
-    {
-        delta = (delta < 0) ? (((-1) * delta) + (1 << LOG2_BLOCK_SIZE)): delta;
-        uint64_t new_signature=bitset<SIGNATURE_BITS>((signature<<LEFT_MOVE_BITS)^delta).to_ullong();
-        return new_signature;
-    }
 
     vector<map<uint64_t,IPTableEntry>> data;
     Repl<uint64_t,IPTableEntry> *repl;
@@ -864,8 +615,6 @@ public:
         vector<pair<uint64_t,int>> res;
         vector<pair<uint64_t,int>> same_ip_pf;
         vector<pair<uint64_t,int>> ip_next_pf;
-//        if(signature!=0)
-//            same_ip_pf=signaturetable.prefetch(signature,addr,degree,fill_l2_threshold,fill_llc_threshold);
         if(!same_ip_pf.empty())
         {
             trigger_ip_signature[cpu]++;
@@ -898,7 +647,6 @@ public:
         return res;
     }
 private:
-    SignatureTable signaturetable;
     RecentRequest recentrequest;
     DelayQueue delayqueue;
     IPTable iptable;
@@ -906,12 +654,7 @@ private:
 
 vector<LP> lp(NUM_CPUS);
 vector<FilterTable> ft(NUM_CPUS);
-vector<uint64_t> last_pf_fill(NUM_CPUS,0);
-vector<uint64_t> last_pf_hit(NUM_CPUS,0);
 
-vector<double> FILL_L2_THRESHOLD(NUM_CPUS,L2_THRESHOLD);
-vector<double> FILL_LLC_THRESHOLD(NUM_CPUS,LLC_THRESHOLD);
-vector<int> DEGREE(NUM_CPUS,PREFETCH_DEGREE);
 
 void CACHE::l2c_prefetcher_initialize()
 {
@@ -922,61 +665,8 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
 {
     uint64_t base_addr=(addr>>LOG2_BLOCK_SIZE);
     lp[cpu].train(ip,base_addr,cache_hit,current_core_cycle[cpu]);
-    if(cache_hit)
-    {
-        ft[cpu].update(base_addr);
-    }
-    double hit_rate=0.6;
-    if((pf_useful+pf_useless)%256==0)
-    {
-        uint64_t cur_fill=(pf_useful+pf_useless)-last_pf_fill[cpu];
-        if(cur_fill!=0)
-        {
-            hit_rate=(double)(pf_useful-last_pf_hit[cpu])/(pf_useful+pf_useless-last_pf_fill[cpu]);
-        }
-        last_pf_fill[cpu]=pf_useful+pf_useless;
-        last_pf_hit[cpu]=pf_useful;
-    }
-#ifdef Dynamic_Adjustment
-    if(hit_rate>=L2_THRESHOLD_UP_HIT_RATE)
-    {
-      FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]-0.025<=L2_MIN_THRESHOLD)?L2_MIN_THRESHOLD:FILL_L2_THRESHOLD[cpu]-0.025;
-    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
-    }
-    else if(hit_rate<=L2_THRESHOLD_DOWN_HIT_RATE)
-    {
-        FILL_L2_THRESHOLD[cpu]=(FILL_L2_THRESHOLD[cpu]+0.025>=L2_MAX_THRESHOLD)?L2_MAX_THRESHOLD:FILL_L2_THRESHOLD[cpu]+0.025;
-        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
-    }
-    if(hit_rate>=UP_HIT_RATE)
-    {
-      DEGREE[cpu]=(DEGREE[cpu]>=PREFETCH_DEGREE_MAX)?PREFETCH_DEGREE_MAX:(DEGREE[cpu]+1);
-    //   FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]-0.025<=LLC_MIN_THRESHOLD)?LLC_MIN_THRESHOLD:FILL_LLC_THRESHOLD[cpu]-0.025;
-    }
-    else if(hit_rate<=DOWN_HIT_RATE)
-    {
-        DEGREE[cpu]=(DEGREE[cpu]<=PREFETCH_DEGREE_MIN)?PREFETCH_DEGREE_MIN:(DEGREE[cpu]-1);
-        // FILL_LLC_THRESHOLD[cpu]=(FILL_LLC_THRESHOLD[cpu]+0.025>=LLC_MAX_THRESHOLD)?LLC_MAX_THRESHOLD:FILL_LLC_THRESHOLD[cpu]+0.025;
-
-    }
-#endif
     vector<pair<uint64_t,int>> pf_address=lp[cpu].prefetch(cpu,ip,base_addr,DEGREE[cpu],FILL_L2_THRESHOLD[cpu],FILL_LLC_THRESHOLD[cpu]);
-    for(auto i=0;i<pf_address.size();i++)
-    {
-        if(ft[cpu].insert(pf_address[i].first))
-        {
-            if(prefetch_line(ip,addr,((pf_address[i].first)<<LOG2_BLOCK_SIZE),pf_address[i].second,0))
-            {
-
-            }
-            else
-            {
-                ((CACHE *)lower_level)->cpu=cpu;
-                ((CACHE *)lower_level)->prefetch_line(ip,addr,((pf_address[i].first)<<LOG2_BLOCK_SIZE),FILL_LLC,0);
-                ((CACHE *)lower_level)->cpu=0;
-            }
-        }
-    }
+    prefetch_line(ip,addr,((pf_address[i].first)<<LOG2_BLOCK_SIZE),pf_address[i].second,0);
     return metadata_in;
 }
 
