@@ -50,7 +50,7 @@ def read_ip_value(path):
                                                                                         ip[1][1], ip[1][2]))
     occupy = 0
     for ip in result:
-        valuable_ips.append(ip)
+        valuable_ips.append(ip[0].strip())
         occupy += ip[1][4]
         if ip[1][0] < 0.5 and occupy > 0.8:
             break
@@ -73,7 +73,7 @@ def deal_with_ip(ip_value):
 def reload_valuable_ips(valuable_ips, reload_path):
     f = open(reload_path, "w+", encoding="utf-8")
     for ip in valuable_ips:
-        f.write(str(ip).strip() + "\n")
+        f.write(ip + "\n")
     f.close()
 
 def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num):
