@@ -25,9 +25,11 @@ def get_experiment_result(path):
 
 
 def read_ip_value(path):
+    valuable_ips = []
     ip_value = {}
     f = open(path, "r+", encoding="utf-8")
     whole_num = 0
+    whole_prefetch_num = 0
     for line in f:
         content = line.strip().split("|")
         ip = content[0].split(":")[-1]
@@ -36,17 +38,25 @@ def read_ip_value(path):
         hit = int(content[3].split(":")[-1])
         ip_frequency = int(content[4].split(":")[-1])
         whole_num += ip_frequency
-        ip_value[ip] = [value, ip_frequency, prefetch_num, hit]
+        whole_prefetch_num += prefetch_num
+        ip_value[ip] = [value, ip_frequency, prefetch_num, hit, whole_prefetch_num]
     f.close()
 
     result = sorted(ip_value.items(), key=lambda x: x[1][0], reverse=True)
 
     for ip in result:
+        ip[1][4] = ip[1][2] / whole_prefetch_num
         print("ip:{}, accuracy:{}, percentage:{}, frequency:{}, prefetch_num:{}".format(ip[0], ip[1][0], round(ip[1][1]/whole_num, 2),
                                                                                         ip[1][1], ip[1][2]))
+    occupy = 0
+    for ip in result:
+        valuable_ips.append(ip)
+        occupy += ip[1][4]
+        if ip[1][0] < 0.5 and occupy > 0.8:
+            break
+    print("final ip:{}".format(valuable_ips[-1]))
+    return valuable_ips
 
-
-    return ip_value
 
 def deal_with_ip(ip_value):
     valuable_ips = []
@@ -63,7 +73,7 @@ def deal_with_ip(ip_value):
 def reload_valuable_ips(valuable_ips, reload_path):
     f = open(reload_path, "w+", encoding="utf-8")
     for ip in valuable_ips:
-        f.write(ip + "\n")
+        f.write(str(ip).strip() + "\n")
     f.close()
 
 def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num):
@@ -81,25 +91,27 @@ def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num
 
 def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
     os.system("./run_champsim.sh {} {} {} {}".format(prefetcher, n_warm, n_sim, trace))
-    print("l1 condition:")
-    valuable_ips_l1 = read_ip_value("ip_value_l1.txt")
-    print("l2 condition:")
-    valuable_ips_l2 = read_ip_value("ip_value_l2.txt")
-    valubale_ips = set()
-    all_ips = set()
+    valuable_ips = read_ip_value("ip_value_l1.txt")
 
-    for ip in valuable_ips_l1:
-        all_ips.add(ip)
-        if valuable_ips_l1[ip][0] > 0:
-            valubale_ips.add(ip)
-
-    for ip in valuable_ips_l2:
-        all_ips.add(ip)
-        if valuable_ips_l2[ip][0] > 0:
-            valubale_ips.add(ip)
-
-    print("valuable ip percentage:{}".format(len(valubale_ips) / len(all_ips)))
-    reload_valuable_ips(valubale_ips, important_ip_file)
+    # print("l1 condition:")
+    # valuable_ips_l1 = read_ip_value("ip_value_l1.txt")
+    # print("l2 condition:")
+    # valuable_ips_l2 = read_ip_value("ip_value_l2.txt")
+    # valubale_ips = set()
+    # all_ips = set()
+    #
+    # for ip in valuable_ips_l1:
+    #     all_ips.add(ip)
+    #     if valuable_ips_l1[ip][0] > 0:
+    #         valubale_ips.add(ip)
+    #
+    # for ip in valuable_ips_l2:
+    #     all_ips.add(ip)
+    #     if valuable_ips_l2[ip][0] > 0:
+    #         valubale_ips.add(ip)
+    #
+    # print("valuable ip percentage:{}".format(len(valubale_ips) / len(all_ips)))
+    reload_valuable_ips(valuable_ips, important_ip_file)
 
 def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
     os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
