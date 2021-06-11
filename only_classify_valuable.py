@@ -98,7 +98,7 @@ def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
         if valuable_ips_l2[ip][0] > 0:
             valubale_ips.add(ip)
 
-    print("valuless ip percentage:{}".format(len(valubale_ips) / len(all_ips)))
+    print("valuable ip percentage:{}".format(len(valubale_ips) / len(all_ips)))
     reload_valuable_ips(valubale_ips, important_ip_file)
 
 def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
