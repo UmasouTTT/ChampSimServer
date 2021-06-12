@@ -918,7 +918,7 @@ vector<int> DEGREE(NUM_CPUS,PREFETCH_DEGREE);
 //ip分类
 vector<uint64_t>valuless_ips;
 
-vector<uint64_t> read_important_files(string file_path)
+vector<uint64_t> read_valuless_files(string file_path)
 {
     ifstream file(file_path);
     string line;
@@ -941,7 +941,7 @@ vector<uint64_t> read_important_files(string file_path)
 void CACHE::l2c_prefetcher_initialize()
 {
      //ip classify
-     valuless_ips = read_important_files("valuless_ips.txt");
+     valuless_ips = read_valuless_files("valuless_ips.txt");
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
