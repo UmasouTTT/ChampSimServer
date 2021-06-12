@@ -948,11 +948,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
 {
     //is ip important
     if(valuless_ips.end() == find(valuless_ips.begin(), valuless_ips.end(), ip)){
-       // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
-        return;
-    }
-    else{
-       //cslog.makeLog(string("ip: " + to_string(ip) + " is important!"), true);
+        return metadata_in;
     }
 
 
