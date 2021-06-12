@@ -54,8 +54,16 @@ def read_ip_value(path):
         occupy += ip[1][4]
         if ip[1][0] < 0.5 and occupy > 0.8:
             break
-    print("final ip:{}".format(valuable_ips[-1]))
-    return valuable_ips
+
+    valuless_ips = []
+    for ip in result:
+        if ip[0].strip() not in valuable_ips:
+            valuless_ips.append(ip[0].strip())
+
+
+    print("valuable_ips:{}".format(valuable_ips))
+    print("valuless_ips:{}".format(valuless_ips))
+    return valuable_ips, valuless_ips
 
 
 def deal_with_ip(ip_value):
@@ -70,9 +78,14 @@ def deal_with_ip(ip_value):
     print("important ip num : {}, percentage : {}".format(len(valuable_ips), len(valuable_ips)/len(ip_value)))
     return valuable_ips
 
-def reload_valuable_ips(valuable_ips, reload_path):
-    f = open(reload_path, "w+", encoding="utf-8")
+def reload_valuable_ips(valuable_ips, valuless, reload_valuable_path, reload_valuless_path):
+    f = open(reload_valuable_path, "w+", encoding="utf-8")
     for ip in valuable_ips:
+        f.write(ip + "\n")
+    f.close()
+
+    f = open(reload_valuless_path, "w+", encoding="utf-8")
+    for ip in valuless:
         f.write(ip + "\n")
     f.close()
 
@@ -89,9 +102,9 @@ def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num
         percentage = deal_with_ip(read_ip_value("log.txt"))
         print(trace.split('.')[1].split('-')[0], percentage)
 
-def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
+def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_valuable_path, relod_valuless_path):
     os.system("./run_champsim.sh {} {} {} {}".format(prefetcher, n_warm, n_sim, trace))
-    valuable_ips = read_ip_value("ip_value_l1.txt")
+    valuable_ips, valuless = read_ip_value("ip_value_l1.txt")
 
     # print("l1 condition:")
     # valuable_ips_l1 = read_ip_value("ip_value_l1.txt")
@@ -111,7 +124,7 @@ def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_path):
     #         valubale_ips.add(ip)
     #
     # print("valuable ip percentage:{}".format(len(valubale_ips) / len(all_ips)))
-    reload_valuable_ips(valuable_ips, important_ip_file)
+    reload_valuable_ips(valuable_ips, valuless, relod_valuable_path, relod_valuless_path)
 
 def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
     os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
@@ -123,7 +136,8 @@ if __name__ == '__main__':
     trace = ""
     trace_dir = "dpc3_traces"
     result_dir = "results_10M"
-    important_ip_file = "important_ips.txt"
+    valuable_fir = "important_ips.txt"
+    valuelss_fir = "valuless_ips.txt"
     n_warm = 1
     n_sim = 10
     ip_valuable_analysisor = "bimodal-no-paper_ipcp_value-paper_ipcp_value-no-lru-1core"
@@ -157,7 +171,7 @@ if __name__ == '__main__':
         print("Start make experiment on {}".format(trace))
         print("Start find valuable ips ...")
         #bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core
-        find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, important_ip_file)
+        find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, valuable_fir, valuelss_fir)
         #print("Start make experiment ...")
         os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
 
