@@ -933,7 +933,7 @@ vector<uint64_t> read_important_files(string file_path)
     else // 没有该文件
     {
         cout << "no such file" << endl;
-        cslog.makeLog(string("no such file!"), true);
+        exit(0);
     }
     return line_contents;
 }
