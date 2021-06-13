@@ -406,7 +406,7 @@ void CACHE::l1d_prefetcher_initialize()
 void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type)
 {
     //is ip important
-    if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
+   if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
        // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
         return;
     }
