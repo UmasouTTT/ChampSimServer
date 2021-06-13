@@ -362,7 +362,7 @@ void stat_col_L1(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
 vector<uint64_t>important_ips;
 map<uint64_t, vector<pair<uint64_t, uint64_t>>>valuless_ip_pattern;
 ChampSimLog cslog("valuess_pattern.txt");
-uint64_t time = 0;
+uint64_t time_valuless = 0;
 
 
 
@@ -418,9 +418,9 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
     //is ip valuless
     if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
         // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
-        valuless_ip_pattern[ip].push_back(make_pair(addr, time));
+        valuless_ip_pattern[ip].push_back(make_pair(addr, time_valuless));
     }
-    time += 1;
+    time_valuless += 1;
 
     //获取ip,address元数据
     uint64_t curr_page = hash_page(addr >> LOG2_PAGE_SIZE); 	//current page
