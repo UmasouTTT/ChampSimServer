@@ -684,7 +684,7 @@ const int AT_SIZE = 128;
 
 vector<Bingo> prefetchers;
 
-void CACHE::l2c_prefetcher_initialize(uint32_t cpu) {
+void CACHE::l2c_prefetcher_initialize() {
     //classify
     valuless_ips = read_valuless_files("valuless_ips.txt");
 
@@ -697,7 +697,7 @@ void CACHE::l2c_prefetcher_initialize(uint32_t cpu) {
         PC_WIDTH, PHT_SIZE, FT_SIZE, AT_SIZE));
 }
 
-void CACHE::l2c_prefetcher_operate(uint32_t cpu, uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in) {
+uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in) {
     //is ip important
     if(valuless_ips.end() == find(valuless_ips.begin(), valuless_ips.end(), ip)){
             return metadata_in;
@@ -714,13 +714,13 @@ void CACHE::l2c_prefetcher_operate(uint32_t cpu, uint64_t addr, uint64_t ip, uin
     return metadata_in;
 }
 
-void CACHE::l2c_prefetcher_cache_fill(uint32_t cpu, uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch,uint64_t evicted_addr, , uint32_t metadata_in) {
+void CACHE::l2c_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch,uint64_t evicted_addr, , uint32_t metadata_in) {
     /* inform all bingo modules of the eviction */
     for (int i = 0; i < NUM_CPUS; i += 1)
         prefetchers[i].eviction(evicted_addr >> LOG2_BLOCK_SIZE);
     return metadata_in;
 }
-void CACHE::llc_prefetcher_final_stats(uint32_t cpu) {}
+void CACHE::llc_prefetcher_final_stats() {}
 
 
 
