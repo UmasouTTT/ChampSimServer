@@ -1049,6 +1049,29 @@ const int DEBUG_LEVEL = 0;
 vector<Bingo> prefetchers;
 }
 
+//ip分类
+vector<uint64_t>valuless_ips;
+
+vector<uint64_t> read_valuless_files(string file_path)
+{
+    ifstream file(file_path);
+    string line;
+    vector<uint64_t> line_contents;
+    if (file) // 有该文件
+    {
+        while (getline(file, line)) // line中不包括每行的换行符
+        {
+            line_contents.push_back(stoi(line));
+        }
+    }
+    else // 没有该文件
+    {
+        cout << "no such file" << endl;
+        exit(0);
+    }
+    return line_contents;
+}
+
 void CACHE::l2c_prefetcher_initialize() {
     /*=== Bingo Settings ===*/
     const int REGION_SIZE = 2 * 1024;  /* size of spatial region = 2KB */
@@ -1070,6 +1093,7 @@ void CACHE::l2c_prefetcher_initialize() {
     L1D_PREF::prefetchers = vector<L1D_PREF::Bingo>(
         NUM_CPUS, L1D_PREF::Bingo(REGION_SIZE >> LOG2_BLOCK_SIZE, MIN_ADDR_WIDTH, MAX_ADDR_WIDTH, PC_WIDTH, FT_SIZE,
                       AT_SIZE, PHT_SIZE, PHT_WAYS, PF_STREAMER_SIZE, L1D_PREF::DEBUG_LEVEL));
+    return metadata_in;
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in) {
