@@ -1073,6 +1073,9 @@ vector<uint64_t> read_valuless_files(string file_path)
 }
 
 void CACHE::l2c_prefetcher_initialize() {
+    //classify
+    valuless_ips = read_valuless_files("valuless_ips.txt");
+
     /*=== Bingo Settings ===*/
     const int REGION_SIZE = 2 * 1024;  /* size of spatial region = 2KB */
     const int PC_WIDTH = 16;           /* number of PC bits used in PHT */
@@ -1097,6 +1100,11 @@ void CACHE::l2c_prefetcher_initialize() {
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in) {
+    //is ip important
+    if(valuless_ips.end() == find(valuless_ips.begin(), valuless_ips.end(), ip)){
+        return metadata_in;
+    }
+
     if (L1D_PREF::DEBUG_LEVEL >= 2) {
         cerr << "CACHE::l1d_prefetcher_operate(addr=0x" << hex << addr << ", ip=0x" << ip << ", cache_hit=" << dec
              << (int)cache_hit << ", type=" << (int)type << ")" << dec << endl;
