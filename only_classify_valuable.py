@@ -180,7 +180,7 @@ if __name__ == '__main__':
         f = open("valuess_pattern.txt", "r+", encoding="utf-8")
         valuless_pattern = f.readlines()
         f.close()
-        f = open("valuless:{}".format(trace), "w+", encodeing="utf-8")
+        f = open("valuless:{}".format(trace), "w+", encoding="utf-8")
         for line in valuless_pattern:
             f.write(line)
         f.close()
