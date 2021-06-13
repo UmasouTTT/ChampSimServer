@@ -360,8 +360,9 @@ void stat_col_L1(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
 
 //ip分类
 vector<uint64_t>important_ips;
-map<uint64_t, vector<uint64_t>>valuless_ip_pattern;
+map<uint64_t, vector<pair<uint64_t, uint64_t>>>valuless_ip_pattern;
 ChampSimLog cslog("valuess_pattern.txt");
+uint64_t time = 0;
 
 
 
@@ -375,7 +376,7 @@ vector<uint64_t> read_important_files(string file_path)
         while (getline(file, line)) // line中不包括每行的换行符
         {
             line_contents.push_back(stoi(line));
-            valuless_ip_pattern[stoi(line)] = vector<uint64_t>();
+            valuless_ip_pattern[stoi(line)] = vector<pair<uint64_t, uint64_t>>();
         }
     }
     else // 没有该文件
@@ -417,8 +418,9 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
     //is ip valuless
     if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
         // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
-        valuless_ip_pattern[ip].push_back(addr);
+        valuless_ip_pattern[ip].push_back(make_pair(addr, time));
     }
+    time += 1;
 
     //获取ip,address元数据
     uint64_t curr_page = hash_page(addr >> LOG2_PAGE_SIZE); 	//current page
@@ -948,11 +950,11 @@ void CACHE::l1d_prefetcher_final_stats()
         cslog.makeLog(string("ip :　" + to_string(ip_itor->first)), true);
         cout << ip_itor->first <<endl;
         for (auto addr_itor = ip_itor->second.begin(); addr_itor != ip_itor->second.end() ; addr_itor++) {
-            uint64_t addr = *addr_itor;
+            uint64_t addr = addr_itor->first;
             uint64_t curr_page = addr >> LOG2_PAGE_SIZE; 	//current page
             uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F; 	//cache line offset
             cout << "addr:" << to_string(addr) << "page:" << to_string(curr_page) << "offset:" << to_string(line_offset) << endl;
-            cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset)), true);
+            cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset) + "time:" + to_string(addr_itor->second)), true);
 
         }
         cslog.makeLog(("**************"), true);
