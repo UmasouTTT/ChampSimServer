@@ -946,12 +946,13 @@ void CACHE::l1d_prefetcher_final_stats()
 {
     for (auto ip_itor = valuless_ip_pattern.begin(); ip_itor != valuless_ip_pattern.end() ; ip_itor++) {
         cslog.makeLog(string("ip :　" + to_string(ip_itor->first)), true);
+        cout << ip_itor->first <<endl;
         for (auto addr_itor = ip_itor->second.begin(); addr_itor != ip_itor->second.end() ; addr_itor++) {
             uint64_t addr = *addr_itor;
             uint64_t curr_page = addr >> LOG2_PAGE_SIZE; 	//current page
             uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F; 	//cache line offset
-
-            cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset), true);
+            cout << "addr:" << to_string(addr) << "page:" << to_string(curr_page) << "offset:" << to_string(line_offset) << endl;
+            cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset), true));
 
         }
         cslog.makeLog(("**************"), true);
