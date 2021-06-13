@@ -954,7 +954,7 @@ void CACHE::l1d_prefetcher_final_stats()
             cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset), true);
 
         }
-        cslog.makeLog("**************"), true);
+        cslog.makeLog(("**************"), true);
     }
 
 
