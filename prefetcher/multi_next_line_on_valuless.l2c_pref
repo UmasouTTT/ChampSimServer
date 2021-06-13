@@ -1,15 +1,45 @@
 #include "cache.h"
+#include <vector>
 
+using namespace std;
+
+//ip分类
+vector<uint64_t>valuless_ips;
+
+vector<uint64_t> read_valuless_files(string file_path)
+{
+    ifstream file(file_path);
+    string line;
+    vector<uint64_t> line_contents;
+    if (file) // 有该文件
+    {
+        while (getline(file, line)) // line中不包括每行的换行符
+        {
+            line_contents.push_back(stoi(line));
+        }
+    }
+    else // 没有该文件
+    {
+        cout << "no such file" << endl;
+        exit(0);
+    }
+    return line_contents;
+}
 
 void CACHE::l2c_prefetcher_initialize() 
 {
+
+    valuless_ips = read_valuless_files("valuless_ips.txt");
     cout << "CPU " << cpu << " L2C next line prefetcher" << endl;
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
 
-
+    //is ip important
+    if(valuless_ips.end() == find(valuless_ips.begin(), valuless_ips.end(), ip)){
+        return metadata_in;
+    }
     DP ( if (warmup_complete[cpu]) {
     cout << "[" << NAME << "] " << __func__ << hex << " base_cl: " << (addr>>LOG2_BLOCK_SIZE);
     cout << " pf_cl: " << (pf_addr>>LOG2_BLOCK_SIZE) << " ip: " << ip << " cache_hit: " << +cache_hit << " type: " << +type << endl; });
