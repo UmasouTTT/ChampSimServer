@@ -684,7 +684,7 @@ const int AT_SIZE = 128;
 
 vector<Bingo> prefetchers;
 
-uint32_t CACHE::l2c_prefetcher_initialize_(uint32_t cpu) {
+uint32_t CACHE::l2c_prefetcher_initialize(uint32_t cpu) {
     if (cpu != 0)
         return;
 
@@ -694,7 +694,7 @@ uint32_t CACHE::l2c_prefetcher_initialize_(uint32_t cpu) {
                                                 PC_WIDTH, PHT_SIZE, FT_SIZE, AT_SIZE));
 }
 
-uint32_t CACHE::l2c_prefetcher_operate_(uint32_t cpu, uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type) {
+uint32_t CACHE::l2c_prefetcher_operate(uint32_t cpu, uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type) {
     /* call prefetcher and send prefetches */
     uint64_t block_number = addr >> LOG2_BLOCK_SIZE;
     vector<uint64_t> to_prefetch = prefetchers[cpu].access(block_number, ip);
@@ -704,7 +704,7 @@ uint32_t CACHE::l2c_prefetcher_operate_(uint32_t cpu, uint64_t addr, uint64_t ip
     }
 }
 
-void CACHE::l2c_prefetcher_cache_fill_(uint32_t cpu, uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch,uint64_t evicted_addr) {
+void CACHE::l2c_prefetcher_cache_fill(uint32_t cpu, uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch,uint64_t evicted_addr) {
     /* inform all bingo modules of the eviction */
     for (int i = 0; i < NUM_CPUS; i += 1)
         prefetchers[i].eviction(evicted_addr >> LOG2_BLOCK_SIZE);
