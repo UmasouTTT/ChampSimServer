@@ -1093,7 +1093,7 @@ void CACHE::l2c_prefetcher_initialize() {
     L1D_PREF::prefetchers = vector<L1D_PREF::Bingo>(
         NUM_CPUS, L1D_PREF::Bingo(REGION_SIZE >> LOG2_BLOCK_SIZE, MIN_ADDR_WIDTH, MAX_ADDR_WIDTH, PC_WIDTH, FT_SIZE,
                       AT_SIZE, PHT_SIZE, PHT_WAYS, PF_STREAMER_SIZE, L1D_PREF::DEBUG_LEVEL));
-    return metadata_in;
+
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in) {
@@ -1105,7 +1105,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     }
 
     if (type != LOAD)
-        return;
+        return metadata_in;
 
     uint64_t block_number = addr >> LOG2_BLOCK_SIZE;
 
@@ -1127,7 +1127,7 @@ uint32_t CACHE::l2c_prefetcher_cache_fill(
     uint64_t evicted_block_number = evicted_addr >> LOG2_BLOCK_SIZE;
 
     if (this->block[set][way].valid == 0)
-        return; /* no eviction */
+        return metadata_in; /* no eviction */
 
     /* inform all sms modules of the eviction */
     for (int i = 0; i < NUM_CPUS; i += 1)
