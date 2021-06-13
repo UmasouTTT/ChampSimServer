@@ -29,11 +29,11 @@ def make_one_experiment(trace_dir, result_dir, prefetcher, n_warm, n_sim, log_pa
         if num > case_num:
             break
     #get result
-    results = get_experiment_result(result_dir)
-    f = open(log_path, "w+", encoding="utf-8")
-    for trace in results:
-        f.write(trace + " : " + results[trace] + "\n")
-    f.close()
+    # results = get_experiment_result(result_dir)
+    # f = open(log_path, "w+", encoding="utf-8")
+    # for trace in results:
+    #     f.write(trace + " : " + results[trace] + "\n")
+    # f.close()
 
 
 if __name__ == '__main__':
@@ -43,12 +43,12 @@ if __name__ == '__main__':
     #ip_feature_prefetcher = "bimodal-no-ip_feature_find-no-no-lru-1core"
     #spp_prefetcher = "bimodal-no-next_line-next_line-no-lru-1core"
     #ipcp_prefetcher = "bimodal-no-ipcp-ipcp-ipcp-lru-1core"
-    ip_value_finder = "bimodal-no-paper_ipcp_value-no-no-lru-1core"
+    ip_value_finder = "bimodal-no-kaichao-no-no-lru-1core"
 
 
     branch_predicor = "bimodal"
     l1i_prefetcher = "no"
-    l1d_prefetcher = "paper_ipcp_value"
+    l1d_prefetcher = "kaichao"
     l2c_prefetcher = "no"
     llc_prefetcher = "no"
     llc_replacement = "lru"
