@@ -705,33 +705,32 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
 
             trackers_l1[cpu][index].pref_type = S_TYPE;
             
-	    #ifdef DO_PREF
-	    int found_in_filter = 0;
-	    for(int i = 0; i < recent_request_filter.size(); i++)
-   	    {
-	    	    if(recent_request_filter[i] == ((pf_address >> 6) & RR_TAG_MASK))
-      		    {
-			// Prefetch address is present in RR filter
-			found_in_filter = 1;
-  	 	    }
-	    }
-	    //Issue prefetch request only if prefetch address is not present in RR filter
-	    if(found_in_filter == 0) 
-	    {
-	        //find valuable ip
+            #ifdef DO_PREF
+            int found_in_filter = 0;
+            for(int i = 0; i < recent_request_filter.size(); i++)
+            {
+                    if(recent_request_filter[i] == ((pf_address >> 6) & RR_TAG_MASK))
+                    {
+                // Prefetch address is present in RR filter
+                        found_in_filter = 1;
+                    }
+            }
+            //find valuable ip
             update_when_prefetch(ip, pf_address);
-
-		    prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
-		    //Add to RR filter
-		    recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
-		if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
-			recent_request_filter.erase(recent_request_filter.begin());
-	    }
+            //Issue prefetch request only if prefetch address is not present in RR filter
+            if(found_in_filter == 0)
+            {
+                prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
+                //Add to RR filter
+                recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
+            if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
+                recent_request_filter.erase(recent_request_filter.begin());
+            }
             #endif
             num_prefs++;
             SIG_DP(cout << "1, ");
             }
-    } else 
+        } else
         flag = 1;
 
 
@@ -770,12 +769,11 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
                         found_in_filter = 1;
                     }
             }
+            //find valuable ip
+            update_when_prefetch(ip, pf_address);
 	    //Issue prefetch request only if prefetch address is not present in RR filter
             if(found_in_filter == 0)
             {
-                //find valuable ip
-                update_when_prefetch(ip, pf_address);
-
                 prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
                 //Add to RR filter
                 recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
@@ -822,12 +820,13 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
                             // Prefetch address is present in RR filter
                             found_in_filter = 1;
                         }
-		}
+		        }
+                //find valuable ip
+                update_when_prefetch(ip, pf_address);
 		//Issue prefetch request only if prefetch address is not present in RR filter
                 if(found_in_filter == 0)
                 {
-                    //find valuable ip
-                    update_when_prefetch(ip, pf_address);
+
 
                     prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
                     //Add to RR filter
@@ -871,11 +870,12 @@ if(num_prefs == 0 && spec_nl[cpu] == 1){
                     found_in_filter = 1;
                 }
         }
+        //find valuable ip
+        update_when_prefetch(ip, pf_address);
 	//Issue prefetch request only if prefetch address is not present in RR filter
         if(found_in_filter == 0)
         {
-            //find valuable ip
-            update_when_prefetch(ip, pf_address);
+
 
             prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
             //Add to RR filter

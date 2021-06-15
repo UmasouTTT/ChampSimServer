@@ -359,7 +359,7 @@ void stat_col_L1(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
 }
 
 //ip分类
-vector<uint64_t>important_ips;
+vector<uint64_t>valuless_ips;
 map<uint64_t, vector<pair<uint64_t, uint64_t>>>valuless_ip_pattern;
 ChampSimLog cslog("valuess_pattern.txt");
 uint64_t time_valuless = 0;
@@ -403,10 +403,10 @@ void CACHE::l1d_prefetcher_initialize()
 
     }
     //ip classify
-    important_ips = read_important_files("valuless_ips.txt");
+    valuless_ips = read_important_files("valuless_ips.txt");
     cslog.makeLog(string("finish read valuless ips!"), true);
-    cslog.makeLog(string("ips size: " + to_string(important_ips.size())), true);
-    for(auto it = important_ips.begin(); it != important_ips.end(); it++){
+    cslog.makeLog(string("ips size: " + to_string(valuless_ips.size())), true);
+    for(auto it = valuless_ips.begin(); it != valuless_ips.end(); it++){
         cslog.makeLog(string("ip: " + to_string((*it)) + " is valuless!"), true);
     }
 
@@ -416,7 +416,7 @@ void CACHE::l1d_prefetcher_initialize()
 void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type)
 {
     //is ip valuless
-    if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
+    if(valuless_ips.end() != find(valuless_ips.begin(), valuless_ips.end(), ip)){
         // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
         valuless_ip_pattern[ip].push_back(make_pair(addr, time_valuless));
     }
