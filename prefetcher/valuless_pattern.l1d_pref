@@ -954,7 +954,7 @@ void CACHE::l1d_prefetcher_final_stats()
             uint64_t curr_page = addr >> LOG2_PAGE_SIZE; 	//current page
             uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F; 	//cache line offset
             cout << "addr:" << to_string(addr) << "page:" << to_string(curr_page) << "offset:" << to_string(line_offset) << endl;
-            cslog.makeLog(string("addr : " + to_string(addr) + "page : " + to_string(curr_page) + "offset : " + to_string(line_offset) + "time:" + to_string(addr_itor->second)), true);
+            cslog.makeLog(string("addr : " + to_string(addr) + " page : " + to_string(curr_page) + " offset : " + to_string(line_offset) + " time:" + to_string(addr_itor->second)), true);
 
         }
         cslog.makeLog(("**************"), true);
