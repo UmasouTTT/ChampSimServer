@@ -61,7 +61,7 @@ def read_ip_value(path):
     for ip in result:
         if ip[1][0] >= 0.5 * avg_value:
             valuable_ips.append(ip[0].strip())
-        elif ip[1][0] > 0:
+        if ip[1][0] > 0:
             valuless_ips.append(ip[0].strip())
 
 
