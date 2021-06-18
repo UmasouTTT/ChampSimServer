@@ -22,18 +22,22 @@ def get_experiment_result(path):
         #os.remove(path)
     return results
 
-
-
 def read_ip_value(path):
-    valuable_ips = []
+
     ip_value = {}
     f = open(path, "r+", encoding="utf-8")
     whole_num = 0
     whole_prefetch_num = 0
+    valuable_ip_num = 0
+    whole_value = 0
+
     for line in f:
         content = line.strip().split("|")
         ip = content[0].split(":")[-1]
         value = round(float(content[1].split(":")[-1]), 2)
+        if value > 0:
+            valuable_ip_num += 1
+            whole_value += value
         prefetch_num = int(content[2].split(":")[-1])
         hit = int(content[3].split(":")[-1])
         ip_frequency = int(content[4].split(":")[-1])
@@ -49,26 +53,29 @@ def read_ip_value(path):
         print("ip:{}, accuracy:{}, percentage:{}, frequency:{}, prefetch_num:{}".format(ip[0], ip[1][0], round(ip[1][1]/whole_num, 2),
                                                                                         ip[1][1], ip[1][2]))
     occupy = 0
+    valuless_ips = []
+    valuable_ips = []
+    avg_value = whole_value / valuable_ip_num
+    print("avg_value:", avg_value)
+    start_less_valuable = False
     for ip in result:
-        if ip[1][0] > 0.0:
+        if ip[1][0] >= 0.5 * avg_value:
             valuable_ips.append(ip[0].strip())
-        # valuable_ips.append(ip[0].strip())
+        elif ip[1][0] > 0:
+            valuless_ips.append(ip[0].strip())
+
+
         # occupy += ip[1][4]
         # if ip[1][0] <= 0.001:
         #     break
-        # if ip[1][0] < 0.5 and occupy > 0.8:
-        #     break
+        # if ip[1][0] <= 0.3:
+        #     start_less_valuable = True
 
-    valuless_ips = []
-    for ip in result:
-        if ip[0].strip() not in valuable_ips:
-            valuless_ips.append(ip[0].strip())
 
 
     print("valuable_ips:{}".format(valuable_ips))
     print("valuless_ips:{}".format(valuless_ips))
     return valuable_ips, valuless_ips
-
 
 def deal_with_ip(ip_value):
     valuable_ips = []
@@ -132,9 +139,6 @@ def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_valuable_path, rel
 
 def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num):
     os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
-
-
-
 
 if __name__ == '__main__':
     trace = ""

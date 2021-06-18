@@ -397,7 +397,7 @@ void CACHE::l2c_prefetcher_initialize()
 
     }
     //ip classify
-    important_ips = read_important_files("important_ips.txt");
+    important_ips = read_important_files("valuless_ips.txt");
     cslog.makeLog(string("finish read ips!"), true);
     cslog.makeLog(string("ips size: " + to_string(important_ips.size())), true);
     for(auto it = important_ips.begin(); it != important_ips.end(); it++){
