@@ -33,351 +33,354 @@ pref_fill is incremented. The pref_late variable is modified whenever a demand r
 vice versa in the cache's MSHR as, if the prefetch would've been on time, the demand request would've hit in the cache.
 ****************************************************************************************************************************/ 
 
+namespace ipcp_l1{
+    #define DO_PREF
+    #define NUM_BLOOM_ENTRIES 4096				    // For book-keeping purposes
+    #define NUM_IP_TABLE_L1_ENTRIES 64
+    #define NUM_CSPT_ENTRIES 128			   	    // = 2^NUM_SIG_BITS
+    #define NUM_SIG_BITS 7					    // num of bits in signature
+    #define NUM_IP_INDEX_BITS 6
+    #define NUM_IP_TAG_BITS 9
+    #define NUM_PAGE_TAG_BITS 2
+    #define S_TYPE 1                                            // stream
+    #define CS_TYPE 2                                           // constant stride
+    #define CPLX_TYPE 3                                         // complex stride
+    #define NL_TYPE 4                                           // next line
+    #define CPLX_DIST 0
+    #define NUM_OF_RR_ENTRIES 32				    // recent request filter entries
+    #define RR_TAG_MASK 0xFFF				    // 12 bits of prefetch line address are stored in recent request filter
+    #define NUM_RST_ENTRIES 8                                   // region stream table entries
+    #define MAX_POS_NEG_COUNT 64				    // 6-bit saturating counter
+    #define NUM_OF_LINES_IN_REGION 32			    // 32 cache lines in 2KB region
+    #define REGION_OFFSET_MASK 0x1F				    // 5-bit offset for 2KB region
 
-#define DO_PREF
-#define NUM_BLOOM_ENTRIES 4096				    // For book-keeping purposes
-#define NUM_IP_TABLE_L1_ENTRIES 64	
-#define NUM_CSPT_ENTRIES 128			   	    // = 2^NUM_SIG_BITS
-#define NUM_SIG_BITS 7					    // num of bits in signature
-#define NUM_IP_INDEX_BITS 6 	
-#define NUM_IP_TAG_BITS 9 	
-#define NUM_PAGE_TAG_BITS 2
-#define S_TYPE 1                                            // stream
-#define CS_TYPE 2                                           // constant stride
-#define CPLX_TYPE 3                                         // complex stride
-#define NL_TYPE 4                                           // next line
-#define CPLX_DIST 0                                          
-#define NUM_OF_RR_ENTRIES 32				    // recent request filter entries
-#define RR_TAG_MASK 0xFFF				    // 12 bits of prefetch line address are stored in recent request filter
-#define NUM_RST_ENTRIES 8                                   // region stream table entries      
-#define MAX_POS_NEG_COUNT 64				    // 6-bit saturating counter
-#define NUM_OF_LINES_IN_REGION 32			    // 32 cache lines in 2KB region
-#define REGION_OFFSET_MASK 0x1F				    // 5-bit offset for 2KB region
+    // #define SIG_DEBUG_PRINT				    // Uncomment to turn on Debug Print
+    #ifdef SIG_DEBUG_PRINT
+    #define SIG_DP(x) x
+    #else
+    #define SIG_DP(x)
+    #endif
 
-// #define SIG_DEBUG_PRINT				    // Uncomment to turn on Debug Print
-#ifdef SIG_DEBUG_PRINT
-#define SIG_DP(x) x
-#else
-#define SIG_DP(x)
-#endif
+    class IP_TABLE_L1 {
+      public:
+        uint64_t ip_tag;
+        uint64_t last_vpage;                                    // last page seen by IP
+        uint64_t last_line_offset;                              // last cl offset in the 4KB page
+        int64_t last_stride;                                    // last stride observed
+        uint16_t ip_valid;					    // valid bit
+        int conf;                                               // CS confidence
+        uint16_t signature;                                     // CPLX signature
+        uint16_t str_dir;                                       // stream direction
+        uint16_t str_valid;                                     // stream valid
+        uint16_t pref_type;                                     // pref type or class for book-keeping purposes.
 
-class IP_TABLE_L1 {
-  public:
-    uint64_t ip_tag;					    
-    uint64_t last_vpage;                                    // last page seen by IP 
-    uint64_t last_line_offset;                              // last cl offset in the 4KB page 
-    int64_t last_stride;                                    // last stride observed 
-    uint16_t ip_valid;					    // valid bit
-    int conf;                                               // CS confidence 
-    uint16_t signature;                                     // CPLX signature 
-    uint16_t str_dir;                                       // stream direction 
-    uint16_t str_valid;                                     // stream valid 
-    uint16_t pref_type;                                     // pref type or class for book-keeping purposes.
-
-    IP_TABLE_L1 () {
-        ip_tag = 0;
-        last_vpage = 0;
-        last_line_offset = 0;
-        last_stride = 0;
-        ip_valid = 0;
-        signature = 0;
-        conf = 0;
-        str_dir = 0;
-        str_valid = 0;
-        pref_type = 0;
-    };
-};
-
-/*	IP TABLE STORAGE OVERHEAD: 288 Bytes
-
-	Single Entry:
-
-	FIELD					STORAGE (bits)
-	
-	IP tag					9 
-	last page				2
-	last line offset			6
-	last stride				7 	(6 bits stride + 1 sign bit)
-	IP valid				1
-	confidence				2
-	signature				7
-	stream direction			1	1
-	stream valid				1
-	
-	Total 					36
-
-	Full Table Storage Overhead: 
-
-	64 entries * 36 bits = 2304 bits = 288 Bytes
-
-	NOTE: The field prefetch class is used for book-keeping purposes. 
-
-*/
-
-
-class CONST_STRIDE_PRED_TABLE {
-public:
-    int stride;
-    int conf;
-
-    CONST_STRIDE_PRED_TABLE () {
-        stride = 0;
-        conf = 0;
-    };        
-};
-
-/*	CONSTANT STRIDE STORAGE OVERHEAD: 144 Bytes
-
-	Single Entry:
-
-	FIELD					STORAGE (bits)
-	
-	stride					7	(6 bits stride + 1 sign bit)
-	confidence 				2
-
-	Total					9
-
-	Full Table Storage Overhead:
-	
-	128 entries * 9 bits = 1152 bits = 144 Bytes
-
-*/
-
-/* This class is for bookkeeping purposes only. */
-class STAT_COLLECT {
-  public:
-    uint64_t useful;                                    
-    uint64_t filled;                                    
-    uint64_t misses;	
-    uint64_t polluted_misses;  	                            
-
-    uint8_t bl_filled[NUM_BLOOM_ENTRIES];		
-    uint8_t bl_request[NUM_BLOOM_ENTRIES];		
-
-    STAT_COLLECT () {
-        useful = 0;
-        filled = 0;
-        misses = 0;
-        polluted_misses = 0;
-
-        for(int i=0; i<NUM_BLOOM_ENTRIES; i++){
-            bl_filled[i] = 0;
-            bl_request[i] = 0;
-        }
-    };
-};
-
-class REGION_STREAM_TABLE {
-    public:
-        uint64_t region_id;		
-        uint64_t tentative_dense;			// tentative dense bit
-        uint64_t trained_dense;				// trained dense bit
-        uint64_t pos_neg_count;				// positive/negative stream counter
-        uint64_t dir;					// direction of stream - 1 for +ve and 0 for -ve
-        uint64_t lru;					// lru for replacement
-        uint8_t line_access[NUM_OF_LINES_IN_REGION];	// bit vector to store which lines in the 2KB region have been accessed
-        REGION_STREAM_TABLE () {
-            region_id=0;
-            tentative_dense=0;
-            trained_dense=0;
-            pos_neg_count=MAX_POS_NEG_COUNT/2;
-            dir=0;
-            lru=0;
-            for(int i=0; i < NUM_OF_LINES_IN_REGION; i++)
-                line_access[i]=0;
-        };
-};
-
-/*	REGION STREAM TABLE STORAGE OVERHEAD:
-
-	Single Entry: 
-
-	FIELD					STORAGE (bits)
-
-	region id				3
-	tentative dense				1
-	trained dense				1
-	positive/negative count			6
-	direction				1
-	lru 					3
-	bit vector line access			32	(for 2KB region)
-
-	Total					47
-
-	Full Table Storage Overhead:
-
-	8 entries * 47 bits = 376 bits = 47 Bytes
-
-*/
-
-
-REGION_STREAM_TABLE rstable [NUM_CPUS][NUM_RST_ENTRIES];
-int acc_filled[NUM_CPUS][5];
-int acc_useful[NUM_CPUS][5];
-
-int acc[NUM_CPUS][5];
-int prefetch_degree[NUM_CPUS][5];
-int num_conflicts =0;
-int test;
-
-uint64_t eval_buffer[NUM_CPUS][1024] = {};
-STAT_COLLECT stats[NUM_CPUS][5];     // for GS, CS, CPLX, NL and no class
-IP_TABLE_L1 trackers_l1[NUM_CPUS][NUM_IP_TABLE_L1_ENTRIES];
-CONST_STRIDE_PRED_TABLE CSPT_l1[NUM_CPUS][NUM_CSPT_ENTRIES];
-
-vector<uint64_t> recent_request_filter;		// to filter redundant prefetch requests 
-
-/* 	RECENT REQUEST FILTER STORAGE OVERHEAD: 48 Bytes
-
-	FIELD					STORAGE (bits)
-	
-	Tag					12
-
-	Total Storage Overhead:
-
-	32 entries * 12 bits = 384 bits = 48 Bytes
-
-*/
-
-uint64_t prev_cpu_cycle[NUM_CPUS];
-uint64_t num_misses[NUM_CPUS];
-float mpki[NUM_CPUS] = {0};
-int spec_nl[NUM_CPUS] = {0}, flag_nl[NUM_CPUS] = {0};
-uint64_t num_access[NUM_CPUS];
-
-int meta_counter[NUM_CPUS][4] = {0};                      // for book-keeping
-int total_count[NUM_CPUS] = {0};                          // for book-keeping
-
-//ip分类
-vector<uint64_t>important_ips;
-ChampSimLog cslog("ip_log_only_classify.txt");
-
-/* update_sig_l1: 7 bit signature is updated by performing a left-shift of 1 bit on the old signature and xoring the outcome with the delta*/
-
-uint16_t update_sig_l1(uint16_t old_sig, int delta){
-    	uint16_t new_sig = 0;
-    	int sig_delta = 0;
-
-    	// 7-bit sign magnitude form, since we need to track deltas from +63 to -63
-    	sig_delta = (delta < 0) ? (((-1) * delta) + (1 << 6)) : delta;
-    	new_sig = ((old_sig << 1) ^ sig_delta) & ((1 << NUM_SIG_BITS)-1);                     
-
-    	return new_sig;
-}
-
-/* encode_metadata: The stride, prefetch class type and speculative nl fields are encoded in the metadata. */
-
-uint32_t encode_metadata(int stride, uint16_t type, int spec_nl){
-	uint32_t metadata = 0;
-
-	// first encode stride in the last 8 bits of the metadata
-	if(stride > 0)
-	    metadata = stride;
-	else
-	    metadata = ((-1*stride) | 0b1000000);
-
-	// encode the type of IP in the next 4 bits 			 
-	metadata = metadata | (type << 8);
-
-	// encode the speculative NL bit in the next 1 bit
-	metadata = metadata | (spec_nl << 12);
-
-	return metadata;
-}
-
-/*If the actual stride and predicted stride are equal, then the confidence counter is incremented. */
-
-int update_conf(int stride, int pred_stride, int conf){
-    if(stride == pred_stride){             // use 2-bit saturating counter for confidence
-        conf++;
-        if(conf > 3)
-            conf = 3;
-    } else {
-        conf--;
-        if(conf < 0)
+        IP_TABLE_L1 () {
+            ip_tag = 0;
+            last_vpage = 0;
+            last_line_offset = 0;
+            last_stride = 0;
+            ip_valid = 0;
+            signature = 0;
             conf = 0;
-    }
+            str_dir = 0;
+            str_valid = 0;
+            pref_type = 0;
+        };
+    };
 
-    return conf;
-}
+    /*	IP TABLE STORAGE OVERHEAD: 288 Bytes
+
+    	Single Entry:
+
+    	FIELD					STORAGE (bits)
+
+    	IP tag					9
+    	last page				2
+    	last line offset			6
+    	last stride				7 	(6 bits stride + 1 sign bit)
+    	IP valid				1
+    	confidence				2
+    	signature				7
+    	stream direction			1	1
+    	stream valid				1
+
+    	Total 					36
+
+    	Full Table Storage Overhead:
+
+    	64 entries * 36 bits = 2304 bits = 288 Bytes
+
+    	NOTE: The field prefetch class is used for book-keeping purposes.
+
+    */
 
 
-uint64_t hash_bloom(uint64_t addr){
-    uint64_t first_half, sec_half;
-    first_half = addr & 0xFFF;
-    sec_half = (addr >> 12) & 0xFFF;
-    if((first_half ^ sec_half) >= 4096)
-        assert(0);
-    return ((first_half ^ sec_half) & 0xFFF);
-}
+    class CONST_STRIDE_PRED_TABLE {
+    public:
+        int stride;
+        int conf;
 
-uint64_t hash_page(uint64_t addr){
-    uint64_t hash;
-    while(addr != 0){
-        hash = hash ^ addr;
-        addr = addr >> 6;
-    }
+        CONST_STRIDE_PRED_TABLE () {
+            stride = 0;
+            conf = 0;
+        };
+    };
 
-    return hash & ((1 << NUM_PAGE_TAG_BITS)-1);
-}
+    /*	CONSTANT STRIDE STORAGE OVERHEAD: 144 Bytes
 
+    	Single Entry:
 
-void stat_col_L1(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
-    uint64_t index = hash_bloom(addr);
-    int ip_index = ip & ((1 << NUM_IP_INDEX_BITS)-1);
-    uint16_t ip_tag = (ip >> NUM_IP_INDEX_BITS) & ((1 << NUM_IP_TAG_BITS)-1);
+    	FIELD					STORAGE (bits)
 
+    	stride					7	(6 bits stride + 1 sign bit)
+    	confidence 				2
 
-    for(int i=0; i<5; i++){
-        if(cache_hit){
-            if(stats[cpu][i].bl_filled[index] == 1){
-                stats[cpu][i].useful++;
-                stats[cpu][i].filled++;
-                stats[cpu][i].bl_filled[index] = 0;
+    	Total					9
+
+    	Full Table Storage Overhead:
+
+    	128 entries * 9 bits = 1152 bits = 144 Bytes
+
+    */
+
+    /* This class is for bookkeeping purposes only. */
+    class STAT_COLLECT {
+      public:
+        uint64_t useful;
+        uint64_t filled;
+        uint64_t misses;
+        uint64_t polluted_misses;
+
+        uint8_t bl_filled[NUM_BLOOM_ENTRIES];
+        uint8_t bl_request[NUM_BLOOM_ENTRIES];
+
+        STAT_COLLECT () {
+            useful = 0;
+            filled = 0;
+            misses = 0;
+            polluted_misses = 0;
+
+            for(int i=0; i<NUM_BLOOM_ENTRIES; i++){
+                bl_filled[i] = 0;
+                bl_request[i] = 0;
             }
+        };
+    };
+
+    class REGION_STREAM_TABLE {
+        public:
+            uint64_t region_id;
+            uint64_t tentative_dense;			// tentative dense bit
+            uint64_t trained_dense;				// trained dense bit
+            uint64_t pos_neg_count;				// positive/negative stream counter
+            uint64_t dir;					// direction of stream - 1 for +ve and 0 for -ve
+            uint64_t lru;					// lru for replacement
+            uint8_t line_access[NUM_OF_LINES_IN_REGION];	// bit vector to store which lines in the 2KB region have been accessed
+            REGION_STREAM_TABLE () {
+                region_id=0;
+                tentative_dense=0;
+                trained_dense=0;
+                pos_neg_count=MAX_POS_NEG_COUNT/2;
+                dir=0;
+                lru=0;
+                for(int i=0; i < NUM_OF_LINES_IN_REGION; i++)
+                    line_access[i]=0;
+            };
+    };
+
+    /*	REGION STREAM TABLE STORAGE OVERHEAD:
+
+    	Single Entry:
+
+    	FIELD					STORAGE (bits)
+
+    	region id				3
+    	tentative dense				1
+    	trained dense				1
+    	positive/negative count			6
+    	direction				1
+    	lru 					3
+    	bit vector line access			32	(for 2KB region)
+
+    	Total					47
+
+    	Full Table Storage Overhead:
+
+    	8 entries * 47 bits = 376 bits = 47 Bytes
+
+    */
+
+
+    REGION_STREAM_TABLE rstable [NUM_CPUS][NUM_RST_ENTRIES];
+    int acc_filled[NUM_CPUS][5];
+    int acc_useful[NUM_CPUS][5];
+
+    int acc[NUM_CPUS][5];
+    int prefetch_degree[NUM_CPUS][5];
+    int num_conflicts =0;
+    int test;
+
+    uint64_t eval_buffer[NUM_CPUS][1024] = {};
+    STAT_COLLECT stats[NUM_CPUS][5];     // for GS, CS, CPLX, NL and no class
+    IP_TABLE_L1 trackers_l1[NUM_CPUS][NUM_IP_TABLE_L1_ENTRIES];
+    CONST_STRIDE_PRED_TABLE CSPT_l1[NUM_CPUS][NUM_CSPT_ENTRIES];
+
+    vector<uint64_t> recent_request_filter;		// to filter redundant prefetch requests
+
+    /* 	RECENT REQUEST FILTER STORAGE OVERHEAD: 48 Bytes
+
+    	FIELD					STORAGE (bits)
+
+    	Tag					12
+
+    	Total Storage Overhead:
+
+    	32 entries * 12 bits = 384 bits = 48 Bytes
+
+    */
+
+    uint64_t prev_cpu_cycle[NUM_CPUS];
+    uint64_t num_misses[NUM_CPUS];
+    float mpki[NUM_CPUS] = {0};
+    int spec_nl[NUM_CPUS] = {0}, flag_nl[NUM_CPUS] = {0};
+    uint64_t num_access[NUM_CPUS];
+
+    int meta_counter[NUM_CPUS][4] = {0};                      // for book-keeping
+    int total_count[NUM_CPUS] = {0};                          // for book-keeping
+
+    //ip分类
+    vector<uint64_t>important_ips;
+    ChampSimLog cslog("ip_log_only_classify.txt");
+
+    /* update_sig_l1: 7 bit signature is updated by performing a left-shift of 1 bit on the old signature and xoring the outcome with the delta*/
+
+    uint16_t update_sig_l1(uint16_t old_sig, int delta){
+        	uint16_t new_sig = 0;
+        	int sig_delta = 0;
+
+        	// 7-bit sign magnitude form, since we need to track deltas from +63 to -63
+        	sig_delta = (delta < 0) ? (((-1) * delta) + (1 << 6)) : delta;
+        	new_sig = ((old_sig << 1) ^ sig_delta) & ((1 << NUM_SIG_BITS)-1);
+
+        	return new_sig;
+    }
+
+    /* encode_metadata: The stride, prefetch class type and speculative nl fields are encoded in the metadata. */
+
+    uint32_t encode_metadata(int stride, uint16_t type, int spec_nl){
+    	uint32_t metadata = 0;
+
+    	// first encode stride in the last 8 bits of the metadata
+    	if(stride > 0)
+    	    metadata = stride;
+    	else
+    	    metadata = ((-1*stride) | 0b1000000);
+
+    	// encode the type of IP in the next 4 bits
+    	metadata = metadata | (type << 8);
+
+    	// encode the speculative NL bit in the next 1 bit
+    	metadata = metadata | (spec_nl << 12);
+
+    	return metadata;
+    }
+
+    /*If the actual stride and predicted stride are equal, then the confidence counter is incremented. */
+
+    int update_conf(int stride, int pred_stride, int conf){
+        if(stride == pred_stride){             // use 2-bit saturating counter for confidence
+            conf++;
+            if(conf > 3)
+                conf = 3;
+        } else {
+            conf--;
+            if(conf < 0)
+                conf = 0;
         }
-        else
-        {
-            if(ip_tag == trackers_l1[cpu][ip_index].ip_tag){
-                if(trackers_l1[cpu][ip_index].pref_type == i)
-                    stats[cpu][i].misses++;
+
+        return conf;
+    }
+
+
+    uint64_t hash_bloom(uint64_t addr){
+        uint64_t first_half, sec_half;
+        first_half = addr & 0xFFF;
+        sec_half = (addr >> 12) & 0xFFF;
+        if((first_half ^ sec_half) >= 4096)
+            assert(0);
+        return ((first_half ^ sec_half) & 0xFFF);
+    }
+
+    uint64_t hash_page(uint64_t addr){
+        uint64_t hash;
+        while(addr != 0){
+            hash = hash ^ addr;
+            addr = addr >> 6;
+        }
+
+        return hash & ((1 << NUM_PAGE_TAG_BITS)-1);
+    }
+
+
+    void stat_col_L1(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
+        uint64_t index = hash_bloom(addr);
+        int ip_index = ip & ((1 << NUM_IP_INDEX_BITS)-1);
+        uint16_t ip_tag = (ip >> NUM_IP_INDEX_BITS) & ((1 << NUM_IP_TAG_BITS)-1);
+
+
+        for(int i=0; i<5; i++){
+            if(cache_hit){
                 if(stats[cpu][i].bl_filled[index] == 1){
-                    stats[cpu][i].polluted_misses++;
+                    stats[cpu][i].useful++;
                     stats[cpu][i].filled++;
                     stats[cpu][i].bl_filled[index] = 0;
                 }
             }
-        }
+            else
+            {
+                if(ip_tag == trackers_l1[cpu][ip_index].ip_tag){
+                    if(trackers_l1[cpu][ip_index].pref_type == i)
+                        stats[cpu][i].misses++;
+                    if(stats[cpu][i].bl_filled[index] == 1){
+                        stats[cpu][i].polluted_misses++;
+                        stats[cpu][i].filled++;
+                        stats[cpu][i].bl_filled[index] = 0;
+                    }
+                }
+            }
 
-        if(num_misses[cpu] % 1024 == 0){
-            for(int j=0; j<NUM_BLOOM_ENTRIES; j++){
-                stats[cpu][i].filled += stats[cpu][i].bl_filled[j];
-                stats[cpu][i].bl_filled[j] = 0;
-                stats[cpu][i].bl_request[j] = 0;
+            if(num_misses[cpu] % 1024 == 0){
+                for(int j=0; j<NUM_BLOOM_ENTRIES; j++){
+                    stats[cpu][i].filled += stats[cpu][i].bl_filled[j];
+                    stats[cpu][i].bl_filled[j] = 0;
+                    stats[cpu][i].bl_request[j] = 0;
+                }
             }
         }
     }
+
+    vector<uint64_t> read_important_files(string file_path)
+    {
+        ifstream file(file_path);
+        string line;
+        vector<uint64_t> line_contents;
+        if (file) // 有该文件
+        {
+            while (getline(file, line)) // line中不包括每行的换行符
+            {
+                line_contents.push_back(stoi(line));
+            }
+        }
+        else // 没有该文件
+        {
+            cout << "no such file" << endl;
+            cslog.makeLog(string("no such file!"), true);
+        }
+        return line_contents;
+    }
 }
 
-vector<uint64_t> read_important_files(string file_path)
-{
-    ifstream file(file_path);
-    string line;
-    vector<uint64_t> line_contents;
-    if (file) // 有该文件
-    {
-        while (getline(file, line)) // line中不包括每行的换行符
-        {
-            line_contents.push_back(stoi(line));
-        }
-    }
-    else // 没有该文件
-    {
-        cout << "no such file" << endl;
-        cslog.makeLog(string("no such file!"), true);
-    }
-    return line_contents;
-}
+using namespace ipcp_l1;
 
 void CACHE::l1d_prefetcher_initialize() 
 {
@@ -706,7 +709,7 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
                 if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
                     recent_request_filter.erase(recent_request_filter.begin());
             }*/
-            prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
+            prefetch_line(ip, addr, pf_address, FILL_L1, 0);
             //Add to RR filter
             recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
             if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
@@ -773,7 +776,7 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
                     if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
                         recent_request_filter.erase(recent_request_filter.begin());
                 }*/
-                prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
+                prefetch_line(ip, addr, pf_address, FILL_L1, 0);
                 //Add to RR filter
                 recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
                 if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
@@ -836,7 +839,7 @@ cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << tracker
                         if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
                             recent_request_filter.erase(recent_request_filter.begin());
                     }*/
-                    prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
+                    prefetch_line(ip, addr, pf_address, FILL_L1, 0);
                     //Add to RR filter
                     recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
                     if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
@@ -893,7 +896,7 @@ if(num_prefs == 0 && spec_nl[cpu] == 1){
                 if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
                     recent_request_filter.erase(recent_request_filter.begin());
             }*/
-            prefetch_line(ip, addr, pf_address, FILL_L1, metadata);
+            prefetch_line(ip, addr, pf_address, FILL_L1, 0);
             //Add to RR filter
             recent_request_filter.push_back((pf_address >> 6) & RR_TAG_MASK);
             if(recent_request_filter.size() > NUM_OF_RR_ENTRIES)
