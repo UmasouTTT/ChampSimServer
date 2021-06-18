@@ -21,6 +21,8 @@ storage for various hardware tables.
 #include <vector>
 #include "log.h"
 
+using namespace std;
+
 /**************************************************************************************************************************
 Note that variables uint64_t pref_useful[NUM_CPUS][6], pref_filled[NUM_CPUS][6], pref_late[NUM_CPUS][6]; are to be declared 
 as members of the CACHE class in inc/cache.h and modified in src/cache.cc where the second level index denotes the IPCP prefetch 

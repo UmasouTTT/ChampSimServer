@@ -39,6 +39,8 @@ storage for various hardware tables.
 #define SIG_DP(x)
 #endif
 
+using namespace std;
+
 class STAT_COLLECT {
   public:
     uint64_t useful;                                    
