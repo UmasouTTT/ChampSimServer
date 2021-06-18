@@ -18,6 +18,7 @@ storage for various hardware tables.
 
 
 #include "cache.h"
+#include "log.h"
 
 #define DO_PREF
 
@@ -196,13 +197,46 @@ void stat_col_L2(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
     }
 }
 
+
+//ip分类
+vector<uint64_t>important_ips_l2;
+vector<uint64_t> read_important_files_l2(string file_path)
+{
+    ifstream file(file_path);
+    string line;
+    vector<uint64_t> line_contents;
+    if (file) // 有该文件
+    {
+        while (getline(file, line)) // line中不包括每行的换行符
+        {
+            line_contents.push_back(stoi(line));
+        }
+    }
+    else // 没有该文件
+    {
+        cout << "no such file" << endl;
+    }
+    return line_contents;
+}
+
 void CACHE::l2c_prefetcher_initialize() 
 {
-
+     //ip classify
+     important_ips_l2 = read_important_files_l2("important_ips.txt");
 }
 
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
+    //is ip important
+   if(important_ips_l2.end() == find(important_ips_l2.begin(), important_ips_l2.end(), ip)){
+       // cslog.makeLog(string("ip: " + to_string(ip) + " is not important!"), true);
+        return metadata_in;
+    }
+    else{
+       //cslog.makeLog(string("ip: " + to_string(ip) + " is important!"), true);
+    }
+
+
     uint64_t page = addr >> LOG2_PAGE_SIZE;
     uint64_t curr_tag = (page ^ (page >> 6) ^ (page >> 12)) & ((1<<NUM_IP_TAG_BITS_L2)-1);
     uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F;
