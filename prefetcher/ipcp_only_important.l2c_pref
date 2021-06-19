@@ -249,8 +249,8 @@ namespace ipcp_l2{
     int total_count[NUM_CPUS] = {0};                          // for book-keeping
 
 //ip分类
-    vector<uint64_t>important_ips;
-    ChampSimLog cslog("ip_log_only_classify.txt");
+vector<uint64_t>important_ips;
+ChampSimLog cslog("ip_log_only_classify.txt");
 
 /* update_sig_l1: 7 bit signature is updated by performing a left-shift of 1 bit on the old signature and xoring the outcome with the delta*/
 

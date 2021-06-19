@@ -115,7 +115,15 @@ def make_one_experiment(trace_dir, prefetcher, n_warm, n_sim, log_path, case_num
 
 def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_valuable_path, relod_valuless_path):
     os.system("./run_champsim.sh {} {} {} {}".format(prefetcher, n_warm, n_sim, trace))
-    valuable_ips, valuless = read_ip_value("ip_value_l1.txt")
+    valuable_ips_l1, valuless_l1 = read_ip_value("ip_value_l1.txt")
+    valuable_ips_l2, valuless_l2 = read_ip_value("ip_value_l2.txt")
+
+    valuable_ips = set()
+    valuless = set()
+    for ip in valuable_ips_l1:
+        valuable_ips.add(ip)
+    for ip in valuable_ips_l2:
+        valuable_ips.add(ip)
 
     # print("l1 condition:")
     # valuable_ips_l1 = read_ip_value("ip_value_l1.txt")
