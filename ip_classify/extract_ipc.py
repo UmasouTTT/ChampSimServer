@@ -34,8 +34,8 @@ def draw_results(results, traces, baseline):
                 y.append(results[result][trace] / baseline[trace] - 1)
             else:
                 y.append(0)
-        #plt.bar(xticks + index * bar_width, height=y, width=bar_width, color=color[index], label=result)
-        plt.bar(xticks + index * bar_width, height=y, width=bar_width, color=color[index])
+        plt.bar(xticks + index * bar_width, height=y, width=bar_width, color=color[index], label=result)
+        #plt.bar(xticks + index * bar_width, height=y, width=bar_width, color=color[index])
         index += 1
 
     plt.legend()
@@ -50,21 +50,26 @@ def calculateImprovement(result, baseline, traces):
 
 results = {}
 print("read results ...")
-only_seperate_train, traces = getContentsFromTargetPrefetcher("only_seperate_train")
-sep_ip_and_train, traces = getContentsFromTargetPrefetcher("sep_ip_and_train")
-absolute_train, traces = getContentsFromTargetPrefetcher("absolute_train")
-kaichao, traces = getContentsFromTargetPrefetcher("kaichao")
+# only_seperate_train, traces = getContentsFromTargetPrefetcher("only_seperate_train")
+# sep_ip_and_train, traces = getContentsFromTargetPrefetcher("sep_ip_and_train")
+# absolute_train, traces = getContentsFromTargetPrefetcher("absolute_train")
+# kaichao, traces = getContentsFromTargetPrefetcher("kaichao")
 ipcp, traces = getContentsFromTargetPrefetcher("ipcp")
-kaichao_formal, traces = getContentsFromTargetPrefetcher("kaichaoformal")
+# kaichao_formal, traces = getContentsFromTargetPrefetcher("kaichaoformal")
 baseline, traces = getContentsFromTargetPrefetcher("baseline")
+l1_l2_both_important, traces = getContentsFromTargetPrefetcher("l1_l2_both_important")
+l1_most_l2_less, traces = getContentsFromTargetPrefetcher("l1_most_l2_less")
 
-results["no_calssify"] = only_seperate_train
-results["classify"] = sep_ip_and_train
-results["absolute_train"] = absolute_train
-results["ipcp"] = ipcp
-results["kaichao"] = kaichao
-results["kaichao_formal"] = kaichao_formal
+# results["no_calssify"] = only_seperate_train
+# results["classify"] = sep_ip_and_train
+# results["absolute_train"] = absolute_train
+# results["kaichao"] = kaichao
+# results["kaichao_formal"] = kaichao_formal
+results["l1_l2_both_important"] = l1_l2_both_important
+results["l1_most_l2_less"] = l1_most_l2_less
+
 results["baseline"] = baseline
+results["ipcp"] = ipcp
 
 
 print("start analysis ...")
@@ -72,31 +77,34 @@ print("start analysis ...")
 #remove not in classify
 useful_traces = []
 for trace in traces:
-    if trace in results["absolute_train"] and trace in results["classify"]:
+    if trace in results["l1_l2_both_important"] and trace in results["l1_most_l2_less"]:
         useful_traces.append(trace)
 
 draw_results(results, useful_traces, baseline)
 
-print("...")
-num = 0
-whole_num = 0
-for trace in traces:
-    if trace not in results["classify"]:
-        continue
-    whole_num += 1
-    if results["classify"][trace] > results["ipcp"][trace]:
-        num += 1
-print(whole_num)
-print(num)
+# print("...")
+# num = 0
+# whole_num = 0
+# for trace in traces:
+#     if trace not in results["classify"]:
+#         continue
+#     whole_num += 1
+#     if results["classify"][trace] > results["ipcp"][trace]:
+#         num += 1
+# print(whole_num)
+# print(num)
 
 
 #improvement
-print("no_calssify", calculateImprovement(only_seperate_train, baseline, useful_traces))
-print("calssify", calculateImprovement(sep_ip_and_train, baseline, useful_traces))
 print("ipcp", calculateImprovement(ipcp, baseline, useful_traces))
-print("kaichao", calculateImprovement(kaichao, baseline, useful_traces))
-print("kaichao_formal", calculateImprovement(kaichao_formal, baseline, useful_traces))
-print("absolute_train", calculateImprovement(absolute_train, baseline, useful_traces))
+print("l1_l2_both_important", calculateImprovement(l1_l2_both_important, baseline, useful_traces))
+print("l1_most_l2_less", calculateImprovement(l1_most_l2_less, baseline, useful_traces))
+# print("no_calssify", calculateImprovement(only_seperate_train, baseline, useful_traces))
+# print("calssify", calculateImprovement(sep_ip_and_train, baseline, useful_traces))
+
+# print("kaichao", calculateImprovement(kaichao, baseline, useful_traces))
+# print("kaichao_formal", calculateImprovement(kaichao_formal, baseline, useful_traces))
+# print("absolute_train", calculateImprovement(absolute_train, baseline, useful_traces))
 
 
 
