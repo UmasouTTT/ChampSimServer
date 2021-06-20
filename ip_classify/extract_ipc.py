@@ -57,16 +57,24 @@ print("read results ...")
 ipcp, traces = getContentsFromTargetPrefetcher("ipcp")
 # kaichao_formal, traces = getContentsFromTargetPrefetcher("kaichaoformal")
 baseline, traces = getContentsFromTargetPrefetcher("baseline")
-l1_l2_both_important, traces = getContentsFromTargetPrefetcher("l1_l2_both_important")
-l1_most_l2_less, traces = getContentsFromTargetPrefetcher("l1_most_l2_less")
+# l1_l2_both_important, traces = getContentsFromTargetPrefetcher("l1_l2_both_important")
+# l1_most_l2_less, traces = getContentsFromTargetPrefetcher("l1_most_l2_less")
+
+# ipcp_compatition, traces = getContentsFromTargetPrefetcher("ipcp_compatition")
+# ipcp_com_classify, traces = getContentsFromTargetPrefetcher("ipcp_com_classify")
+
+ipcp_paper_l1l2_onlyl1train, traces = getContentsFromTargetPrefetcher("ipcp_paper_l1l2_onlyl1train")
 
 # results["no_calssify"] = only_seperate_train
 # results["classify"] = sep_ip_and_train
 # results["absolute_train"] = absolute_train
 # results["kaichao"] = kaichao
 # results["kaichao_formal"] = kaichao_formal
-results["l1_l2_both_important"] = l1_l2_both_important
-results["l1_most_l2_less"] = l1_most_l2_less
+# results["l1_l2_both_important"] = l1_l2_both_important
+# results["l1_most_l2_less"] = l1_most_l2_less
+# results["ipcp_compatition"] = ipcp_compatition
+# results["ipcp_com_classify"] = ipcp_com_classify
+results["ipcp_paper_l1l2_onlyl1train"] = ipcp_paper_l1l2_onlyl1train
 
 results["baseline"] = baseline
 results["ipcp"] = ipcp
@@ -77,7 +85,7 @@ print("start analysis ...")
 #remove not in classify
 useful_traces = []
 for trace in traces:
-    if trace in results["l1_l2_both_important"] and trace in results["l1_most_l2_less"]:
+    if trace in results["ipcp_paper_l1l2_onlyl1train"] and trace in results["ipcp_paper_l1l2_onlyl1train"]:
         useful_traces.append(trace)
 
 draw_results(results, useful_traces, baseline)
@@ -96,9 +104,10 @@ draw_results(results, useful_traces, baseline)
 
 
 #improvement
-print("ipcp", calculateImprovement(ipcp, baseline, useful_traces))
-print("l1_l2_both_important", calculateImprovement(l1_l2_both_important, baseline, useful_traces))
-print("l1_most_l2_less", calculateImprovement(l1_most_l2_less, baseline, useful_traces))
+print("ipcp", calculateImprovement(ipcp, baseline, traces))
+print("ipcp_paper_l1l2_onlyl1train", calculateImprovement(ipcp_paper_l1l2_onlyl1train, baseline, useful_traces))
+# print("ipcp_compatition", calculateImprovement(ipcp_compatition, baseline, traces))
+# print("ipcp_com_classify", calculateImprovement(ipcp_com_classify, baseline, traces))
 # print("no_calssify", calculateImprovement(only_seperate_train, baseline, useful_traces))
 # print("calssify", calculateImprovement(sep_ip_and_train, baseline, useful_traces))
 
