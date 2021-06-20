@@ -34,7 +34,7 @@ def read_ip_value(path):
     for line in f:
         content = line.strip().split("|")
         ip = content[0].split(":")[-1]
-        value = round(float(content[1].split(":")[-1]), 2)
+        value = round(float(content[1].split(":")[-1]), 3)
         if value > 0:
             valuable_ip_num += 1
             whole_value += value
@@ -122,7 +122,10 @@ def find_important_ip(trace, prefetcher, n_warm, n_sim, relod_valuable_path, rel
     valuless = set()
     for ip in valuable_ips_l1:
         valuable_ips.add(ip)
+    print("ip valuable not in l1:")
     for ip in valuable_ips_l2:
+        if ip not in valuless_l1:
+            print(ip)
         valuable_ips.add(ip)
 
     # print("l1 condition:")
