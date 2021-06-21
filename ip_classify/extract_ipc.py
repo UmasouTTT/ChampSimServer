@@ -51,84 +51,55 @@ def calculateImprovement(result, baseline, traces):
         whole_improvement += result[trace] / baseline[trace] - 1
     return whole_improvement / len(traces)
 
+def addNewResults(result, baseline, traces):
+    ipcs, result_traces = getContentsFromTargetPrefetcher(result)
+    global results
+    results[result] = ipcs
+    print(result, calculateImprovement(ipcs, baseline, traces))
+
 results = {}
 print("read results ...")
-# only_seperate_train, traces = getContentsFromTargetPrefetcher("only_seperate_train")
-# sep_ip_and_train, traces = getContentsFromTargetPrefetcher("sep_ip_and_train")
-# absolute_train, traces = getContentsFromTargetPrefetcher("absolute_train")
-# kaichao, traces = getContentsFromTargetPrefetcher("kaichao")
-# kaichao_formal, traces = getContentsFromTargetPrefetcher("kaichaoformal")
-# l1_l2_both_important, traces = getContentsFromTargetPrefetcher("l1_l2_both_important")
-# l1_most_l2_less, traces = getContentsFromTargetPrefetcher("l1_most_l2_less")
 
-ipcp, traces = getContentsFromTargetPrefetcher("ipcp")
 baseline, traces = getContentsFromTargetPrefetcher("baseline")
-page_change_5, traces = getContentsFromTargetPrefetcher("page_change_5")
+addNewResults("ipcp", baseline, traces)
+addNewResults("page_change_5", baseline, traces)
+addNewResults("page_change_4", baseline, traces)
 
-# ipcp_compatition, traces = getContentsFromTargetPrefetcher("ipcp_compatition")
-# ipcp_com_classify, traces = getContentsFromTargetPrefetcher("ipcp_com_classify")
-
-#ipcp_paper_l1l2_onlyl1train, traces = getContentsFromTargetPrefetcher("ipcp_paper_l1l2_onlyl1train")
-
-# results["no_calssify"] = only_seperate_train
-# results["classify"] = sep_ip_and_train
-# results["absolute_train"] = absolute_train
-# results["kaichao"] = kaichao
-# results["kaichao_formal"] = kaichao_formal
-# results["l1_l2_both_important"] = l1_l2_both_important
-# results["l1_most_l2_less"] = l1_most_l2_less
-# results["ipcp_compatition"] = ipcp_compatition
-# results["ipcp_com_classify"] = ipcp_com_classify
-#results["ipcp_paper_l1l2_onlyl1train"] = ipcp_paper_l1l2_onlyl1train
-
-results["baseline"] = baseline
-results["ipcp"] = ipcp
-results["page_change_5"] = page_change_5
 
 
 print("start analysis ...")
 
 #remove not in classify
-useful_traces = []
-for trace in traces:
-    if trace in results["page_change_5"]:
-        useful_traces.append(trace)
+# useful_traces = []
+# for trace in traces:
+#     if trace in results["page_change_5"]:
+#         useful_traces.append(trace)
 
-draw_results(results, useful_traces, baseline)
+draw_results(results, traces, baseline)
 
-print("...")
-change = 0
-useful = 0
-damage = 0
-whole_num = 0
-performance_well_traces = []
-for trace in traces:
-    whole_num += 1
-    if results["ipcp"][trace] != results["page_change_5"][trace]:
-        change += 1
-    if results["ipcp"][trace] > results["page_change_5"][trace]:
-        print(trace)
-        damage += 1
-    if results["ipcp"][trace] < results["page_change_5"][trace]:
-        useful += 1
-        performance_well_traces.append(trace)
-print("whole_num", whole_num)
-print("change", change)
-print("damage", damage)
-print("useful", useful)
+# print("...")
+# change = 0
+# useful = 0
+# damage = 0
+# whole_num = 0
+# performance_well_traces = []
+# for trace in traces:
+#     whole_num += 1
+#     if results["ipcp"][trace] != results["page_change_5"][trace]:
+#         change += 1
+#     if results["ipcp"][trace] > results["page_change_5"][trace]:
+#         print(trace)
+#         damage += 1
+#     if results["ipcp"][trace] < results["page_change_5"][trace]:
+#         useful += 1
+#         performance_well_traces.append(trace)
+# print("whole_num", whole_num)
+# print("change", change)
+# print("damage", damage)
+# print("useful", useful)
 
 
-#improvement
-print("ipcp", calculateImprovement(ipcp, baseline, traces))
-print("page_change_5", calculateImprovement(page_change_5, baseline, traces))
-# print("ipcp_compatition", calculateImprovement(ipcp_compatition, baseline, traces))
-# print("ipcp_com_classify", calculateImprovement(ipcp_com_classify, baseline, traces))
-# print("no_calssify", calculateImprovement(only_seperate_train, baseline, useful_traces))
-# print("calssify", calculateImprovement(sep_ip_and_train, baseline, useful_traces))
 
-# print("kaichao", calculateImprovement(kaichao, baseline, useful_traces))
-# print("kaichao_formal", calculateImprovement(kaichao_formal, baseline, useful_traces))
-# print("absolute_train", calculateImprovement(absolute_train, baseline, useful_traces))
 
 
 
