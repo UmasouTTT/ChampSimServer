@@ -7,10 +7,13 @@ def get_files(path):
     return [path + "/" + trace for trace in traces]
 
 def getContentsFromTargetPrefetcher(results):
+    print(results)
     results = get_files(results)
     prefetcher_ipc = {}
     traces = set()
     for result in results:
+        if "DS_Store" in result:
+            continue
         f = open(result, "r+", encoding="utf-8")
         trace = result.split('/')[-1].split(".champ")[0]
         traces.add(trace)
@@ -54,14 +57,13 @@ print("read results ...")
 # sep_ip_and_train, traces = getContentsFromTargetPrefetcher("sep_ip_and_train")
 # absolute_train, traces = getContentsFromTargetPrefetcher("absolute_train")
 # kaichao, traces = getContentsFromTargetPrefetcher("kaichao")
-ipcp, traces = getContentsFromTargetPrefetcher("ipcp")
 # kaichao_formal, traces = getContentsFromTargetPrefetcher("kaichaoformal")
-baseline, traces = getContentsFromTargetPrefetcher("baseline")
 # l1_l2_both_important, traces = getContentsFromTargetPrefetcher("l1_l2_both_important")
 # l1_most_l2_less, traces = getContentsFromTargetPrefetcher("l1_most_l2_less")
 
-
-paper_classify, traces = getContentsFromTargetPrefetcher("paper_classify")
+ipcp, traces = getContentsFromTargetPrefetcher("ipcp")
+baseline, traces = getContentsFromTargetPrefetcher("baseline")
+page_change_5, traces = getContentsFromTargetPrefetcher("page_change_5")
 
 # ipcp_compatition, traces = getContentsFromTargetPrefetcher("ipcp_compatition")
 # ipcp_com_classify, traces = getContentsFromTargetPrefetcher("ipcp_com_classify")
@@ -81,7 +83,7 @@ paper_classify, traces = getContentsFromTargetPrefetcher("paper_classify")
 
 results["baseline"] = baseline
 results["ipcp"] = ipcp
-results["paper_classify"] = paper_classify
+results["page_change_5"] = page_change_5
 
 
 print("start analysis ...")
@@ -89,27 +91,36 @@ print("start analysis ...")
 #remove not in classify
 useful_traces = []
 for trace in traces:
-    if trace in results["paper_classify"] :
+    if trace in results["page_change_5"]:
         useful_traces.append(trace)
 
 draw_results(results, useful_traces, baseline)
 
-# print("...")
-# num = 0
-# whole_num = 0
-# for trace in traces:
-#     if trace not in results["classify"]:
-#         continue
-#     whole_num += 1
-#     if results["classify"][trace] > results["ipcp"][trace]:
-#         num += 1
-# print(whole_num)
-# print(num)
+print("...")
+change = 0
+useful = 0
+damage = 0
+whole_num = 0
+performance_well_traces = []
+for trace in traces:
+    whole_num += 1
+    if results["ipcp"][trace] != results["page_change_5"][trace]:
+        change += 1
+    if results["ipcp"][trace] > results["page_change_5"][trace]:
+        print(trace)
+        damage += 1
+    if results["ipcp"][trace] < results["page_change_5"][trace]:
+        useful += 1
+        performance_well_traces.append(trace)
+print("whole_num", whole_num)
+print("change", change)
+print("damage", damage)
+print("useful", useful)
 
 
 #improvement
 print("ipcp", calculateImprovement(ipcp, baseline, traces))
-print("paper_classify", calculateImprovement(paper_classify, baseline, useful_traces))
+print("page_change_5", calculateImprovement(page_change_5, baseline, traces))
 # print("ipcp_compatition", calculateImprovement(ipcp_compatition, baseline, traces))
 # print("ipcp_com_classify", calculateImprovement(ipcp_com_classify, baseline, traces))
 # print("no_calssify", calculateImprovement(only_seperate_train, baseline, useful_traces))

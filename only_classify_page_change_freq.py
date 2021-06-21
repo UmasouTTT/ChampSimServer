@@ -26,6 +26,7 @@ def read_ip_value(path):
 
     freq_ips = []
     f = open(path, "r+", encoding="utf-8")
+    is_has_time = False
 
     for line in f:
         content = line.strip().split("|")
@@ -35,6 +36,12 @@ def read_ip_value(path):
         print(ip, per, freq)
         if per < 0.5:
             freq_ips.append(ip)
+        else:
+            is_has_time = True
+
+    if is_has_time:
+        global traces_has_time
+        traces_has_time += 1
 
     f.close()
 
@@ -81,6 +88,7 @@ def compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_pref
     os.system("./build_champsim.sh {} {} {} {} {} {} {}".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
 
 if __name__ == '__main__':
+    traces_has_time = 0
     trace = ""
     trace_dir = "dpc3_traces"
     result_dir = "results_10M"
@@ -118,3 +126,5 @@ if __name__ == '__main__':
         find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, valuable_fir)
         #print("Start make experiment ...")
         os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
+
+    print("Num of trace has time ip :", traces_has_time)
