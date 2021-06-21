@@ -19,6 +19,7 @@ storage for various hardware tables.
 #include "ooo_cpu.h"
 #include "cache.h"
 #include <vector>
+#include <algorithm>
 #include "log.h"
 
 using namespace std;

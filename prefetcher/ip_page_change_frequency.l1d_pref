@@ -1,0 +1,63 @@
+
+#include "ooo_cpu.h"
+#include "cache.h"
+#include <vector>
+#include "log.h"
+#include <map>
+
+using namespace std;
+
+
+//ip frequency
+map<uint64_t, uint64_t> ip_last_page;
+map<uint64_t, uint64_t> ip_frequency;
+map<uint64_t, uint64_t> ip_change_page_num;
+
+ChampSimLog cslog("ip_change_page_frequency.txt");
+
+void calculate_ip_change_page_frequency(uint64_t ip, uint64_t page){
+    if (ip_last_page.end() == ip_last_page.find(ip)){
+        ip_last_page.insert(make_pair(ip, page));
+        ip_frequency.insert(make_pair(ip, 1));
+        ip_change_page_num.insert(make_pair(ip, 0));
+    }
+    else if (ip_last_page[ip] == page){
+        ip_last_page[ip] = page;
+        ip_frequency[ip] += 1;
+    }
+    else{
+        ip_last_page[ip] = page;
+        ip_frequency[ip] += 1;
+        ip_change_page_num[ip] += 1;
+    }
+}
+
+
+void CACHE::l1d_prefetcher_initialize()
+{
+}
+
+void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type)
+{
+
+    //ip change page frequency
+    calculate_ip_change_page_frequency(ip, addr >> LOG2_PAGE_SIZE);
+
+return;
+}
+
+void CACHE::l1d_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+{
+
+}
+void CACHE::l1d_prefetcher_final_stats()
+{
+    //record ip change page frequency
+    for (auto it = ip_frequency.begin(); it != ip_frequency.end() ; it++) {
+        uint64_t ip = it->first;
+        uint64_t ip_freq = it->second;
+        uint64_t ip_change_page_freq = ip_change_page_num[ip];
+        float freq = (float) ip_change_page_freq / (float) ip_freq;
+        cslog.makeLog(string("ip: " + to_string(ip) + "| percentage : " + to_string(freq) + "| freq: " + to_string(ip_freq)), true);
+    }
+}

@@ -19,6 +19,7 @@ storage for various hardware tables.
 
 #include "cache.h"
 #include "log.h"
+#include <algorithm>
 
 #define DO_PREF
 
