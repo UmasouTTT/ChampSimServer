@@ -441,6 +441,11 @@ void CACHE::l1d_prefetcher_initialize()
 
 void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type)
 {
+    //time prefetch
+    /*vector<uint64_t>pf_addresses = make_prefetch_by_time(ip, addr);
+    for (int i = 0; i < pf_addresses.size(); ++i) {
+        prefetch_line_diff_page(ip, addr, pf_addresses[i], FILL_L1, 0);
+    }*/
 
     uint64_t curr_page = hash_page(addr >> LOG2_PAGE_SIZE); 	//current page 
     uint64_t line_addr = addr >> LOG2_BLOCK_SIZE;		//cache line address
@@ -893,11 +898,7 @@ SIG_DP(cout << endl);
 trackers_l1[cpu][index].last_line_offset = line_offset;
 trackers_l1[cpu][index].last_vpage = curr_page;
 
-//time prefetch
-    vector<uint64_t>pf_addresses = make_prefetch_by_time(ip, addr);
-    for (int i = 0; i < pf_addresses.size(); ++i) {
-        prefetch_line_diff_page(ip, addr, pf_addresses[i], FILL_L1, 0);
-    }
+
 
 
 
