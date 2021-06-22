@@ -97,7 +97,7 @@ if __name__ == '__main__':
     n_warm = 1
     n_sim = 10
     ip_valuable_analysisor = "bimodal-no-ip_page_change_frequency-no-no-lru-1core"
-    ip_classify_paper = "bimodal-no-no-spp_classify-no-lru-1core"
+    ip_classify_paper = "bimodal-no-bingo_classify-no-no-lru-1core"
     #ip_classify_paper_compare = "bimodal-no-paper_ipcp_ip_classify_v1-paper_ipcp-no-lru-1core"
 
     #build
@@ -113,8 +113,8 @@ if __name__ == '__main__':
     print("Start compile {} {} {} {} {} {} {}...".format(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num))
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
-    l1d_prefetcher = "no"
-    l2c_prefetcher = "spp_classify"
+    l1d_prefetcher = "bingo_classify"
+    l2c_prefetcher = "no"
     compile_prefetcher(branch_predicor, l1i_prefetcher, l1d_prefetcher, l2c_prefetcher, llc_prefetcher, llc_replacement, core_num)
 
     #make experiment
