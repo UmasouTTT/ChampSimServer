@@ -10,7 +10,7 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="E:\Ubuntu\rootfs\code\ChampSimServer" />
+            <option value="$PROJECT_DIR$" />
           </set>
         </option>
         <option name="version" value="2" />

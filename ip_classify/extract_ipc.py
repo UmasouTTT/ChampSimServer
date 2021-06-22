@@ -7,7 +7,6 @@ def get_files(path):
     return [path + "/" + trace for trace in traces]
 
 def getContentsFromTargetPrefetcher(results):
-    print(results)
     results = get_files(results)
     prefetcher_ipc = {}
     traces = set()
@@ -85,18 +84,25 @@ draw_results(results, traces, baseline)
 # performance_well_traces = []
 # for trace in traces:
 #     whole_num += 1
-#     if results["ipcp"][trace] != results["page_change_5"][trace]:
+#     if results["ipcp"][trace] != results["page_change_4"][trace]:
 #         change += 1
-#     if results["ipcp"][trace] > results["page_change_5"][trace]:
+#     if results["ipcp"][trace] > results["page_change_4"][trace]:
 #         print(trace)
 #         damage += 1
-#     if results["ipcp"][trace] < results["page_change_5"][trace]:
+#     if results["ipcp"][trace] < results["page_change_4"][trace]:
 #         useful += 1
 #         performance_well_traces.append(trace)
 # print("whole_num", whole_num)
 # print("change", change)
 # print("damage", damage)
 # print("useful", useful)
+#
+#
+# results = {}
+# addNewResults("ipcp", baseline, performance_well_traces)
+# addNewResults("page_change_5", baseline, performance_well_traces)
+# addNewResults("page_change_4", baseline, performance_well_traces)
+
 
 
 
