@@ -1421,7 +1421,7 @@ int CACHE::add_wq(PACKET *packet)
     return -1;
 }
 
-int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata)
+/*int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata)
 {
     pf_requested++;
 
@@ -1457,13 +1457,88 @@ int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int 
     }
 
     return 0;
+}*/
+
+int CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata)
+{
+    pf_requested++;
+
+    if (PQ.occupancy < PQ.SIZE) {
+        if ((base_addr>>LOG2_PAGE_SIZE) == (pf_addr>>LOG2_PAGE_SIZE)) {
+
+            PACKET pf_packet;
+            pf_packet.fill_level = pf_fill_level;
+            pf_packet.pf_origin_level = fill_level;
+            if(pf_fill_level == FILL_L1)
+            {
+                pf_packet.fill_l1d = 1;
+            }
+            pf_packet.pf_metadata = prefetch_metadata;
+            pf_packet.cpu = cpu;
+            //pf_packet.data_index = LQ.entry[lq_index].data_index;
+            //pf_packet.lq_index = lq_index;
+            pf_packet.address = pf_addr >> LOG2_BLOCK_SIZE;
+            pf_packet.full_addr = pf_addr;
+            //pf_packet.instr_id = LQ.entry[lq_index].instr_id;
+            //pf_packet.rob_index = LQ.entry[lq_index].rob_index;
+            pf_packet.ip = ip;
+            pf_packet.type = PREFETCH;
+            pf_packet.event_cycle = current_core_cycle[cpu];
+
+            // give a dummy 0 as the IP of a prefetch
+            add_pq(&pf_packet);
+
+            pf_issued++;
+
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+
+int CACHE::prefetch_line_diff_page(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, uint32_t prefetch_metadata) {
+    pf_requested++;
+
+    if (PQ.occupancy < PQ.SIZE) {
+
+            PACKET pf_packet;
+            pf_packet.fill_level = pf_fill_level;
+            pf_packet.pf_origin_level = fill_level;
+            if(pf_fill_level == FILL_L1)
+            {
+                pf_packet.fill_l1d = 1;
+            }
+            pf_packet.pf_metadata = prefetch_metadata;
+            pf_packet.cpu = cpu;
+            //pf_packet.data_index = LQ.entry[lq_index].data_index;
+            //pf_packet.lq_index = lq_index;
+            pf_packet.address = pf_addr >> LOG2_BLOCK_SIZE;
+            pf_packet.full_addr = pf_addr;
+            //pf_packet.instr_id = LQ.entry[lq_index].instr_id;
+            //pf_packet.rob_index = LQ.entry[lq_index].rob_index;
+            pf_packet.ip = ip;
+            pf_packet.type = PREFETCH;
+            pf_packet.event_cycle = current_core_cycle[cpu];
+
+            // give a dummy 0 as the IP of a prefetch
+            add_pq(&pf_packet);
+
+            pf_issued++;
+
+            return 1;
+
+    }
+
+    return 0;
 }
 
 int CACHE::kpc_prefetch_line(uint64_t base_addr, uint64_t pf_addr, int pf_fill_level, int delta, int depth, int signature, int confidence, uint32_t prefetch_metadata)
 {
     if (PQ.occupancy < PQ.SIZE) {
         if ((base_addr>>LOG2_PAGE_SIZE) == (pf_addr>>LOG2_PAGE_SIZE)) {
-            
+
             PACKET pf_packet;
             pf_packet.fill_level = pf_fill_level;
 	    pf_packet.pf_origin_level = fill_level;

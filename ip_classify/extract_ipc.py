@@ -63,8 +63,8 @@ baseline, traces = getContentsFromTargetPrefetcher("baseline")
 addNewResults("ipcp", baseline, traces)
 addNewResults("page_change_5", baseline, traces)
 addNewResults("page_change_4", baseline, traces)
-addNewResults("spp", baseline, traces)
-
+# addNewResults("spp", baseline, traces)
+# addNewResults("spp_classify", baseline, traces)
 
 print("start analysis ...")
 
