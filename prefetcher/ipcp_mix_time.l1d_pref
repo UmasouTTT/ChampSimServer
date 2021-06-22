@@ -390,6 +390,7 @@ void update_ip_last_addr(uint64_t ip, uint64_t addr){
         }
         else{
             update_ip_addr_pair(ip, last_addr, addr);
+            ip_last_addr[ip] = addr;
         }
     }
 }

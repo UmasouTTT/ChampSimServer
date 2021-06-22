@@ -265,6 +265,7 @@ namespace mix_time_l2{
             }
             else{
                 update_ip_addr_pair(ip, last_addr, addr);
+                ip_last_addr[ip] = addr;
             }
         }
     }
