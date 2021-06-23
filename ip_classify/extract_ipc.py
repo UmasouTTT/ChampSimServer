@@ -28,11 +28,15 @@ def draw_results(results, traces, baseline):
     color = ['r', 'b', 'y', 'g', 'c', 'm', 'y']
     xticks = np.arange(len(traces))
 
+
     index = 0
     for result in results:
+        #print(result)
         y = []
         for trace in traces:
             if trace in results[result]:
+                # if result == "classify_mix_time" and "mcf" in trace:
+                #     print(trace, results[result][trace] / baseline[trace])
                 y.append(results[result][trace] / baseline[trace] - 1)
             else:
                 y.append(0)
@@ -59,15 +63,22 @@ def addNewResults(result, baseline, traces):
 results = {}
 print("read results ...")
 
+
+
 baseline, traces = getContentsFromTargetPrefetcher("baseline")
-# addNewResults("ipcp", baseline, traces)
+mcf_trces = []
+for trace in traces:
+    if "gcc" in trace:
+        mcf_trces.append(trace)
+addNewResults("ipcp", baseline, mcf_trces)
 # addNewResults("page_change_5", baseline, traces)
-# addNewResults("classify_mix_time", baseline, traces)
-#addNewResults("mix_time", baseline, traces)
+addNewResults("classify_mix_time", baseline, mcf_trces)
+#addNewResults("classify_mix_time_1", baseline, mcf_trces)
+#addNewResults("mix_time", baseline, mcf_trces)
 
 #addNewResults("page_change_4", baseline, traces)
-addNewResults("spp", baseline, traces)
-addNewResults("spp_classify", baseline, traces)
+# addNewResults("spp", baseline, traces)
+# addNewResults("spp_classify", baseline, traces)
 
 print("start analysis ...")
 
@@ -77,7 +88,7 @@ print("start analysis ...")
 #     if trace in results["page_change_5"]:
 #         useful_traces.append(trace)
 
-draw_results(results, traces, baseline)
+draw_results(results, mcf_trces, baseline)
 
 # print("...")
 # change = 0

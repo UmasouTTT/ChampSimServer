@@ -22,6 +22,7 @@ storage for various hardware tables.
 #include <vector>
 #include <algorithm>
 #include "log.h"
+#include "time_finder.h"
 
 using namespace std;
 
@@ -203,10 +204,12 @@ void stat_col_L2(uint64_t addr, uint8_t cache_hit, uint8_t cpu, uint64_t ip){
 }
 
 
+Time_finder *time_finder = new Time_finder();
 
 
 namespace mix_time_l2{
     #define TIME_DEGREE 3
+
 
     //important
     vector<uint64_t>important_ips;
@@ -301,10 +304,16 @@ void CACHE::l2c_prefetcher_initialize()
     important_ips = read_important_files("important_ips.txt");
 }
 
+
 uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
 {
     if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
-        vector<uint64_t>pf_addresses = make_prefetch_by_time(ip, (addr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+        uint64_t cache_line = (addr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE;
+        uint64_t page = addr >> LOG2_PAGE_SIZE;
+        vector<uint64_t>pf_addresses = time_finder->predict(ip, cache_line);
+        time_finder->train(ip, cache_line, page);
+        //vector<uint64_t>pf_addresses = make_prefetch_by_time(ip, (addr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE);
+
         for (int i = 0; i < pf_addresses.size(); ++i) {
             prefetch_line_diff_page(ip, addr, pf_addresses[i], FILL_L2, 0);
         }
