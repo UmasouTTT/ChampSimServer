@@ -60,13 +60,14 @@ results = {}
 print("read results ...")
 
 baseline, traces = getContentsFromTargetPrefetcher("baseline")
-addNewResults("ipcp", baseline, traces)
-addNewResults("page_change_5", baseline, traces)
-#addNewResults("classify_mix_time", baseline, traces)
+# addNewResults("ipcp", baseline, traces)
+# addNewResults("page_change_5", baseline, traces)
+# addNewResults("classify_mix_time", baseline, traces)
+#addNewResults("mix_time", baseline, traces)
 
 #addNewResults("page_change_4", baseline, traces)
-# addNewResults("spp", baseline, traces)
-# addNewResults("spp_classify", baseline, traces)
+addNewResults("spp", baseline, traces)
+addNewResults("spp_classify", baseline, traces)
 
 print("start analysis ...")
 

@@ -43,13 +43,13 @@ if __name__ == '__main__':
     #ip_feature_prefetcher = "bimodal-no-ip_feature_find-no-no-lru-1core"
     #spp_prefetcher = "bimodal-no-next_line-next_line-no-lru-1core"
     #ipcp_prefetcher = "bimodal-no-ipcp-ipcp-ipcp-lru-1core"
-    ip_value_finder = "bimodal-no-ipcp_mix_time-ipcp-no-lru-1core"
+    ip_value_finder = "bimodal-no-no-ip_stride-no-lru-1core"
 
 
     branch_predicor = "bimodal"
     l1i_prefetcher = "no"
-    l1d_prefetcher = "ipcp_mix_time"
-    l2c_prefetcher = "ipcp"
+    l1d_prefetcher = "no"
+    l2c_prefetcher = "ip_stride"
     llc_prefetcher = "no"
     llc_replacement = "lru"
     core_num = "1"
