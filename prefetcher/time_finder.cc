@@ -45,6 +45,33 @@ void Time_finder::update_ip_last_addr(uint64_t ip, uint64_t addr) {
 
 void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_t next_addr) {
     //is first addr there?
+//    int index = -1;
+//    for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
+//        if (this->time_recorder[ip][i].start_addr == start_addr){
+//            index = i;
+//            break;
+//        }
+//    }
+//    if (index != -1) {
+//        this->time_recorder[ip][index].next_addr.addr = next_addr;
+//        this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
+//    }
+//    else {
+//        Next_addr nextAddr;
+//        nextAddr.addr = next_addr;
+//        nextAddr.conf = DEFAULT_CONF;
+//        Addr_pair addrPair;
+//        addrPair.start_addr = start_addr;
+//        addrPair.next_addr = nextAddr;
+//        addrPair.lru = 0;
+//        this->time_recorder[ip].push_back(addrPair);
+//    }
+
+    //increase others lru
+    for (auto it : this->time_recorder[ip]) {
+        it.lru += 1;
+    }
+    //is first addr there?
     int index = -1;
     for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
         if (this->time_recorder[ip][i].start_addr == start_addr){
@@ -52,80 +79,53 @@ void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_
             break;
         }
     }
-    if (index != -1) {
-        this->time_recorder[ip][index].next_addr.addr = next_addr;
-        this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
+    if (index != -1){
+        this->time_recorder[ip][index].lru = 0;
+        //is same pair?
+        if (this->time_recorder[ip][index].next_addr.addr == next_addr){
+            if (this->time_recorder[ip][index].next_addr.conf < DEFAULT_CONF){
+                this->time_recorder[ip][index].next_addr.conf += 1;
+            }
+        }
+        else{
+            if (this->time_recorder[ip][index].next_addr.conf == 0){
+                this->time_recorder[ip][index].next_addr.addr = next_addr;
+                this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
+            }
+            else{
+                this->time_recorder[ip][index].next_addr.conf -= 1;
+            }
+        }
     }
-    else {
-        Next_addr nextAddr;
-        nextAddr.addr = next_addr;
-        nextAddr.conf = DEFAULT_CONF;
-        Addr_pair addrPair;
-        addrPair.start_addr = start_addr;
-        addrPair.next_addr = nextAddr;
-        addrPair.lru = 0;
-        this->time_recorder[ip].push_back(addrPair);
+    else{
+        //is not full
+        if (this->time_recorder[ip].size() < ENTRY_NUM){
+            Next_addr nextAddr;
+            nextAddr.addr = next_addr;
+            nextAddr.conf = DEFAULT_CONF;
+            Addr_pair addrPair;
+            addrPair.start_addr = start_addr;
+            addrPair.next_addr = nextAddr;
+            addrPair.lru = 0;
+            this->time_recorder[ip].push_back(addrPair);
+        }
+        else{
+            //find victim
+            int victim_index = 0;
+            for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
+                if (this->time_recorder[ip][i].lru > this->time_recorder[ip][victim_index].lru){
+                    victim_index = i;
+                }
+            }
+            //add new pair
+            Next_addr nextAddr;
+            nextAddr.addr = next_addr;
+            nextAddr.conf = DEFAULT_CONF;
+            this->time_recorder[ip][victim_index].lru = 0;
+            this->time_recorder[ip][victim_index].start_addr = start_addr;
+            this->time_recorder[ip][victim_index].next_addr = nextAddr;
+        }
     }
-
-    //increase others lru
-//    for (auto it : this->time_recorder[ip]) {
-//        it.lru += 1;
-//    }
-//    //is first addr there?
-//    int index = 0;
-//    for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
-//        if (this->time_recorder[ip][i].start_addr == start_addr){
-//            index = i;
-//            break;
-//        }
-//    }
-//    if (index != this->time_recorder[ip].size()){
-//        this->time_recorder[ip][index].lru = 0;
-//        //is same pair?
-//        if (this->time_recorder[ip][index].next_addr.addr == next_addr){
-//            if (this->time_recorder[ip][index].next_addr.conf < DEFAULT_CONF){
-//                this->time_recorder[ip][index].next_addr.conf += 1;
-//            }
-//        }
-//        else{
-//            if (this->time_recorder[ip][index].next_addr.conf == 0){
-//                this->time_recorder[ip][index].next_addr.addr = next_addr;
-//                this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
-//            }
-//            else{
-//                this->time_recorder[ip][index].next_addr.conf -= 1;
-//            }
-//        }
-//    }
-//    else{
-//        //is not full
-//        if (this->time_recorder[ip].size() < ENTRY_NUM){
-//            Next_addr nextAddr;
-//            nextAddr.addr = next_addr;
-//            nextAddr.conf = DEFAULT_CONF;
-//            Addr_pair addrPair;
-//            addrPair.start_addr = start_addr;
-//            addrPair.next_addr = nextAddr;
-//            addrPair.lru = 0;
-//            this->time_recorder[ip].push_back(addrPair);
-//        }
-//        else{
-//            //find victim
-//            int victim_index = 0;
-//            for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
-//                if (this->time_recorder[ip][i].lru > this->time_recorder[ip][victim_index].lru){
-//                    victim_index = i;
-//                }
-//            }
-//            //add new pair
-//            Next_addr nextAddr;
-//            nextAddr.addr = next_addr;
-//            nextAddr.conf = DEFAULT_CONF;
-//            this->time_recorder[ip][victim_index].lru = 0;
-//            this->time_recorder[ip][victim_index].start_addr = start_addr;
-//            this->time_recorder[ip][victim_index].next_addr = nextAddr;
-//        }
-//    }
 }
 
 
