@@ -3,6 +3,7 @@
 //
 
 #include "time_finder.h"
+#include "cache.h"
 
 uint64_t Time_finder::find_next_addr(uint64_t ip, uint64_t addr) {
     if (this->time_recorder.find(ip) != this->time_recorder.end()){
@@ -104,11 +105,12 @@ void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_
 
 
 void Time_finder::train(uint64_t ip, uint64_t cache_line, uint64_t page) {
-    //need to update?(只记录换页的)
+    //need to update?(只记录换页的?)
     if (this->ip_last_addr.find(ip) != this->ip_last_addr.end()){
         uint64_t last_addr = this->ip_last_addr[ip];
-        if (last_addr == cache_line){
-            this->update_time_recorder(ip, last_addr, cache_line);
+        uint64_t last_page = last_addr >> LOG2_PAGE_SIZE;
+        if (last_page == page){
+            this->update_ip_last_addr(ip, cache_line);
             return;
         }
         else{
