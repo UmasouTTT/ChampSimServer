@@ -5,7 +5,7 @@
 #include "time_finder.h"
 #include "cache.h"
 #include "log.h"
-ChampSimLog cslog("fix_time.txt");
+//ChampSimLog cslog("fix_time.txt");
 
 uint64_t Time_finder::find_next_addr(uint64_t ip, uint64_t addr) {
     if (this->time_recorder.find(ip) != this->time_recorder.end()){
