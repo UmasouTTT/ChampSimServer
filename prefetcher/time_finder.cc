@@ -4,6 +4,8 @@
 
 #include "time_finder.h"
 #include "cache.h"
+#include "log.h"
+ChampSimLog cslog("fix_time.txt");
 
 uint64_t Time_finder::find_next_addr(uint64_t ip, uint64_t addr) {
     if (this->time_recorder.find(ip) != this->time_recorder.end()){
@@ -43,14 +45,14 @@ void Time_finder::update_ip_last_addr(uint64_t ip, uint64_t addr) {
 
 void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_t next_addr) {
     //is first addr there?
-    int index = 0;
+    int index = -1;
     for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
         if (this->time_recorder[ip][i].start_addr == start_addr){
             index = i;
             break;
         }
     }
-    if (index != this->time_recorder[ip].size()) {
+    if (index != -1) {
         this->time_recorder[ip][index].next_addr.addr = next_addr;
         this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
     }
