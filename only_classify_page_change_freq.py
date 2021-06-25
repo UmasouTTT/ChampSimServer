@@ -123,7 +123,7 @@ if __name__ == '__main__':
         print("Start make experiment on {}".format(trace))
         print("Start find valuable ips ...")
         #bimodal-no-ipcp_ip_value-ipcp-ipcp-lru-1core
-        find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, valuable_fir)
+        #find_important_ip(trace, ip_valuable_analysisor, n_warm, n_sim, valuable_fir)
         #print("Start make experiment ...")
         os.system("./run_champsim.sh {} {} {} {}".format(ip_classify_paper, n_warm, n_sim, trace))
 

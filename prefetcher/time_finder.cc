@@ -5,7 +5,17 @@
 #include "time_finder.h"
 #include "cache.h"
 #include "log.h"
-//ChampSimLog cslog("fix_time.txt");
+
+void Time_finder::repl_ip(vector<uint64_t> erase_ips){
+    //更新逻辑过于暴力,可以修改
+    //erase
+    for (auto it : erase_ips) {
+        this->time_recorder.erase(it);
+        this->ip_last_addr.erase(it);
+    }
+
+}
+
 
 uint64_t Time_finder::find_next_addr(uint64_t ip, uint64_t addr) {
     if (this->time_recorder.find(ip) != this->time_recorder.end()){
@@ -44,33 +54,8 @@ void Time_finder::update_ip_last_addr(uint64_t ip, uint64_t addr) {
 
 
 void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_t next_addr) {
-    //is first addr there?
-//    int index = -1;
-//    for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
-//        if (this->time_recorder[ip][i].start_addr == start_addr){
-//            index = i;
-//            break;
-//        }
-//    }
-//    if (index != -1) {
-//        this->time_recorder[ip][index].next_addr.addr = next_addr;
-//        this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
-//    }
-//    else {
-//        Next_addr nextAddr;
-//        nextAddr.addr = next_addr;
-//        nextAddr.conf = DEFAULT_CONF;
-//        Addr_pair addrPair;
-//        addrPair.start_addr = start_addr;
-//        addrPair.next_addr = nextAddr;
-//        addrPair.lru = 0;
-//        this->time_recorder[ip].push_back(addrPair);
-//    }
-
     //increase others lru
-    for (auto it : this->time_recorder[ip]) {
-        it.lru += 1;
-    }
+
     //is first addr there?
     int index = -1;
     for (int i = 0; i < this->time_recorder[ip].size(); ++i) {
@@ -86,18 +71,33 @@ void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_
             if (this->time_recorder[ip][index].next_addr.conf < DEFAULT_CONF){
                 this->time_recorder[ip][index].next_addr.conf += 1;
             }
+            //lru
+            for (auto it : this->time_recorder[ip]) {
+                it.lru += 1;
+            }
+            this->time_recorder[ip][index].lru = 0;
         }
         else{
             if (this->time_recorder[ip][index].next_addr.conf == 0){
                 this->time_recorder[ip][index].next_addr.addr = next_addr;
                 this->time_recorder[ip][index].next_addr.conf = DEFAULT_CONF;
+                //lru
+                for (auto it : this->time_recorder[ip]) {
+                    it.lru += 1;
+                }
+                this->time_recorder[ip][index].lru = 0;
+
             }
             else{
+
                 this->time_recorder[ip][index].next_addr.conf -= 1;
             }
         }
     }
     else{
+        for (auto it : this->time_recorder[ip]) {
+            it.lru += 1;
+        }
         //is not full
         if (this->time_recorder[ip].size() < ENTRY_NUM){
             Next_addr nextAddr;
@@ -129,7 +129,8 @@ void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_
 }
 
 
-void Time_finder::train(uint64_t ip, uint64_t cache_line, uint64_t page) {
+void Time_finder::train(uint64_t ip, uint64_t cache_line, uint64_t page,  vector<uint64_t>erase_time_ips) {
+    this->repl_ip(erase_time_ips);
     //need to update?(只记录换页的?)
     if (this->ip_last_addr.find(ip) != this->ip_last_addr.end()){
         uint64_t last_addr = this->ip_last_addr[ip];
