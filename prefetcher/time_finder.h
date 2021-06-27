@@ -11,6 +11,7 @@
 
 using namespace std;
 
+//< 50  106 40%   ip:5  entry:20    <500
 #define ENTRY_NUM 20
 //改成动态调整的形式
 #define PREFETCH_DEGREE 3
@@ -42,6 +43,7 @@ private:
     void repl_ip(vector<uint64_t> erase_ips);
     //置换策略需要修改，参考wuhao
     map<uint64_t, vector<Addr_pair>> time_recorder;
+    //ip, last cache line
     map<uint64_t, uint64_t> ip_last_addr;
 
 };

@@ -314,7 +314,7 @@ uint32_t CACHE::l2c_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache
     ipClassifier_l2->update(ip, addr);
     important_ips_l2.assign(ipClassifier->get_important_ips());
 //time
-    if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
+    if(ipClassifier_l2.end() == find(ipClassifier_l2.begin(), ipClassifier_l2.end(), ip)){
         uint64_t cache_line = (addr >> LOG2_BLOCK_SIZE) << LOG2_BLOCK_SIZE;
         uint64_t page = addr >> LOG2_PAGE_SIZE;
         vector<uint64_t>pf_addresses = time_finder->predict(ip, cache_line);

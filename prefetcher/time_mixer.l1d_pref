@@ -481,7 +481,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
     important_ips_l1.assign(ipClassifier->get_important_ips());
     //time prefetch
     //is ip important
-    if(important_ips.end() == find(important_ips.begin(), important_ips.end(), ip)){
+    if(important_ips_l1.end() == find(important_ips_l1.begin(), important_ips_l1.end(), ip)){
         return;
     }
     else{

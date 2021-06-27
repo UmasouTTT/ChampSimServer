@@ -71,7 +71,7 @@ void Time_finder::update_time_recorder(uint64_t ip, uint64_t start_addr, uint64_
             if (this->time_recorder[ip][index].next_addr.conf < DEFAULT_CONF){
                 this->time_recorder[ip][index].next_addr.conf += 1;
             }
-            //lru
+            //lru ???
             for (auto it : this->time_recorder[ip]) {
                 it.lru += 1;
             }
@@ -135,12 +135,13 @@ void Time_finder::train(uint64_t ip, uint64_t cache_line, uint64_t page,  vector
     if (this->ip_last_addr.find(ip) != this->ip_last_addr.end()){
         uint64_t last_addr = this->ip_last_addr[ip];
         uint64_t last_page = last_addr >> LOG2_PAGE_SIZE;
+        //可以试一试不换页
         if (last_page == page){
             this->update_ip_last_addr(ip, cache_line);
             return;
         }
         else{
-            //考虑增加动态调整DEGREE的功能，所以先分开
+            //考虑增加动态调整DEGREE的功能，所以先分开(wuhao MICRO 19)
             uint64_t pref_next_addr = this->find_next_addr(ip, last_addr);
             //same
             if (-1 == pref_next_addr){

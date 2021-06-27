@@ -61,7 +61,7 @@ void Ip_classifier::update(uint64_t ip, uint64_t addr) {
             this->ip_jump[ip].first -= 1;
             this->ip_jump[ip].second += 1;
             //kong jian
-            if (this->ip_jump[ip].first < VICTIM_THRESHOLD){
+            if (this->ip_jump[ip].first < VICTIM_THRESHOLD ){
                 this->ip_jump.erase(ip);
                 this->ip_last_page.erase(ip);
                 if (this->important_ip_map.find(ip) != this->important_ip_map.end()){
