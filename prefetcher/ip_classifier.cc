@@ -5,10 +5,13 @@
 #include "ip_classifier.h"
 #include "cache.h"
 
+/**
+ *功能：当存储信息满了，删除一个换页最不频繁ip对应的存储信息 
+ **/
 void Ip_classifier::update_when_ip_is_full() {
-    auto victim = this->ip_jump.begin();
-    for (auto it : this->ip_jump) {
-        if (it.second.second < victim->second.second){
+    map<uint64_t, pair<uint64_t, uint64_t>>::iterator victim = this->ip_jump.begin();
+    for (map<uint64_t, pair<uint64_t, uint64_t>>::iterator it = this->ip_jump.begin() ; it != this->ip_jump.end(); it++) {
+        if (it->second.second < victim->second.second){
             victim = it;
         }
     }
@@ -16,16 +19,19 @@ void Ip_classifier::update_when_ip_is_full() {
     this->ip_last_page.erase(victim->first);
 }
 
+/**
+ * 功能：对新的具有时间特性的ip进行信息的更新，主要是将其存入important_ip_map以及new_time_ips中，必要时，删除被替换的ip
+ **/
 void Ip_classifier::update_important_ips(uint64_t ip) {
     if (this->important_ip_map.find(ip) == this->important_ip_map.end()){
         //lru
-        for (auto it : this->important_ip_map) {
+        for (auto it : this->important_ip_map) {//更新计数器
             it.second += 1;
         }
-        if (this->important_ip_map.size() == IMPORTANT_IPS_SIZE){
+        if (this->important_ip_map.size() == IMPORTANT_IPS_SIZE){//如果满了，寻找需要替换的位置
             auto victim = this->important_ip_map.begin();
-            for (auto it : this->important_ip_map) {
-                if (it.second > victim->second){
+            for (auto it = this->important_ip_map.begin(); it != this->important_ip_map.end(); it++) {
+                if (it -> second > victim->second){
                     victim = it;
                 }
             }
@@ -40,6 +46,9 @@ void Ip_classifier::update_important_ips(uint64_t ip) {
     }
 }
 
+/**
+ * 
+ **/
 void Ip_classifier::update(uint64_t ip, uint64_t addr) {
     this->new_time_ips.clear();
     this->erase_ips.clear();
@@ -57,8 +66,8 @@ void Ip_classifier::update(uint64_t ip, uint64_t addr) {
     else{
         //
         uint64_t last_page = this->ip_last_page[ip];
-        if (page == last_page){
-            this->ip_jump[ip].first -= 1;
+        if (page == last_page){//没有换页
+            this->ip_jump[ip].first -= 1;//为什么要减一？
             this->ip_jump[ip].second += 1;
             //kong jian
             if (this->ip_jump[ip].first < VICTIM_THRESHOLD ){

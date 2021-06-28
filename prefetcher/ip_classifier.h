@@ -22,17 +22,17 @@ public:
 
     vector<uint64_t> get_important_ips();
 
-    uint64_t get_erase_time_ip(){return this->erase_ips;}
-    uint64_t get_new_time_ip(){return this->new_time_ips;}
+    vector<uint64_t> get_erase_time_ip(){return this->erase_ips;}
+    vector<uint64_t> get_new_time_ip(){return this->new_time_ips;}
 
 private:
     void update_when_ip_is_full();
 
     void update_important_ips(uint64_t ip);
 
-    map<uint64_t, pair<uint64_t, uint64_t>> ip_jump;
-    map<uint64_t, uint64_t> ip_last_page;
-    map<uint64_t, uint64_t> important_ip_map;
+    map<uint64_t, pair<uint64_t, uint64_t>> ip_jump;//该ip换页的次数&总的次数
+    map<uint64_t, uint64_t> ip_last_page;//记录ip上次访问的页面
+    map<uint64_t, uint64_t> important_ip_map;//记录当前学习到的具有时间特征的ip集合，value为lru计数器
     vector<uint64_t> new_time_ips;
     vector<uint64_t> erase_ips;
 };
