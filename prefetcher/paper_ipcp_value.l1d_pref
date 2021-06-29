@@ -586,7 +586,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
             {
 		int count = 0;
 		for(int i = 0; i < NUM_OF_LINES_IN_REGION; i++)
-			if(rstable[cpu][c].line_access[line_offset & REGION_OFFSET_MASK] == 1)
+			if(rstable[cpu][c].line_access[i] == 1)//line_offset & REGION_OFFSET_MASK
 				count++;
 
                 if(count > 24)	//75% of the cache lines in the region are accessed. 
