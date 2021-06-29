@@ -243,7 +243,7 @@ vector<uint64_t> recent_request_filter;		// to filter redundant prefetch request
 uint64_t prev_cpu_cycle[NUM_CPUS];
 uint64_t num_misses[NUM_CPUS];//warm_up完成之后 未命中的个数
 float mpki[NUM_CPUS] = {0};
-int spec_nl[NUM_CPUS] = {0}, flag_nl[NUM_CPUS] = {0};
+int spec_nl[NUM_CPUS] = {0}, flag_nl[NUM_CPUS] = {0};//flag_nl标识是否进行next line预取？
 uint64_t num_access[NUM_CPUS];//每调用一次operator函数，值就加一
 
 int meta_counter[NUM_CPUS][4] = {0};                                                  // for book-keeping
@@ -488,7 +488,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
         uint64_t line_offset = (addr >> LOG2_BLOCK_SIZE) & 0x3F; 	//cache line offset，即line_offset的范围是0~127
         uint16_t signature = 0, last_signature = 0;
         int spec_nl_threshold = 0;
-        int num_prefs = 0;
+        int num_prefs = 0;//统计预取的次数
         uint32_t metadata=0;
         uint16_t ip_tag = (ip >> NUM_IP_INDEX_BITS) & ((1 << NUM_IP_TAG_BITS)-1);
         uint64_t bl_index = 0;
@@ -719,12 +719,12 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
                 cout << last_signature<< ", "  << CSPT_l1[cpu][last_signature].stride<< ", "  << CSPT_l1[cpu][last_signature].conf << "; ";
                 cout << trackers_l1[cpu][index].last_stride << ", " << stride << ", " << trackers_l1[cpu][index].conf << ", " << "; ";
         );
-
+        //这里是否应该提前把flag置为0呢？
         if(trackers_l1[cpu][index].str_valid == 1){                         // stream IP
             // for stream, prefetch with twice the usual degree
             if(prefetch_degree[cpu][1] < 3)
                 flag = 1;
-            meta_counter[cpu][0]++;
+            meta_counter[cpu][0]++;//记录进入各种流的数量，0~3分别是不同类别的流
             total_count[cpu]++;
             for (int i=0; i<prefetch_degree[cpu][1]; i++) {
                 uint64_t pf_address = 0;
@@ -741,7 +741,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
                 if(acc[cpu][1] < 75)
                     metadata = encode_metadata(0, S_TYPE, spec_nl[cpu]);
                 // Check if prefetch address is in same 4 KB page
-                if ((pf_address >> LOG2_PAGE_SIZE) != (addr >> LOG2_PAGE_SIZE)){
+                if ((pf_address >> LOG2_PAGE_SIZE) != (addr >> LOG2_PAGE_SIZE)){//跨页了就停止预取
                     break;
                 }
 
@@ -787,14 +787,14 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
                 uint64_t pf_address = (line_addr + (trackers_l1[cpu][index].last_stride*(i+1))) << LOG2_BLOCK_SIZE;
 
                 // Check if prefetch address is in same 4 KB page
-                if ((pf_address >> LOG2_PAGE_SIZE) != (addr >> LOG2_PAGE_SIZE)){
+                if ((pf_address >> LOG2_PAGE_SIZE) != (addr >> LOG2_PAGE_SIZE)){//跨页就停止预取
                     break;
                 }
 
                 trackers_l1[cpu][index].pref_type = CS_TYPE;
                 bl_index = hash_bloom(pf_address);
                 stats[cpu][CS_TYPE].bl_request[bl_index] = 1;
-                if(acc[cpu][2] > 75)
+                if(acc[cpu][2] > 75)//只有准确率大于阈值，才告诉l2？
                     metadata = encode_metadata(trackers_l1[cpu][index].last_stride, CS_TYPE, spec_nl[cpu]);
                 else
                     metadata = encode_metadata(0, CS_TYPE, spec_nl[cpu]);
@@ -880,7 +880,7 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
 
         // if no prefetches are issued till now, speculatively issue a next_line prefetch
         if(num_prefs == 0 && spec_nl[cpu] == 1){
-            if(flag_nl[cpu] == 0)
+            if(flag_nl[cpu] == 0)//所以第一次进入next_line类的时候不会预取
                 flag_nl[cpu] = 1;
             else {
                 uint64_t pf_address = ((addr>>LOG2_BLOCK_SIZE)+1) << LOG2_BLOCK_SIZE;
@@ -940,7 +940,6 @@ void CACHE::l1d_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit
 
 void CACHE::l1d_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
 {
-
     if(prefetch){
         uint32_t pref_type = metadata_in & 0xF00;
         pref_type = pref_type >> 8;
@@ -951,7 +950,6 @@ void CACHE::l1d_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way,
             stats[cpu][pref_type].bl_request[index] = 0;
         }
     }
-
 }
 void CACHE::l1d_prefetcher_final_stats()
 {

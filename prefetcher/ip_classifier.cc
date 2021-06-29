@@ -90,7 +90,6 @@ void Ip_classifier::update(uint64_t ip, uint64_t addr) {
             }
         }
     }
-
 }
 
 
