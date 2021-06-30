@@ -11,7 +11,7 @@
 void Ip_classifier::update_when_ip_is_full() {
     map<uint64_t, pair<uint64_t, uint64_t>>::iterator victim = this->ip_jump.begin();
     for (map<uint64_t, pair<uint64_t, uint64_t>>::iterator it = this->ip_jump.begin() ; it != this->ip_jump.end(); it++) {
-        if (it->second.second < victim->second.second){
+        if (it->second.first < victim->second.first){
             victim = it;
         }
     }
